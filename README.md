@@ -56,20 +56,6 @@ Plaid lets you get a better overview of your Jira worklog. Add, edit and remove 
 
 See full change log in `changelog.md`
 
-## Installation
-
-### Windows
-
-Download the installer from the latest [release](https://github.com/piotrmski/plaid/releases). Run the executable, and you're good to go. Your application will automatically update to newer releases.
-
-### Ubuntu
-
-Application is available to install from Snapcraft:
-
-```
-sudo snap install plaid
-```
-
 
 ## Development
 
