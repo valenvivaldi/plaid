@@ -43,6 +43,7 @@ export class GridComponent implements OnInit, AfterViewInit {
   _workingHoursStartMinutes: number;
   _workingHoursEndMinutes: number;
   _authenticatedUser: User;
+  _showToday: boolean;
 
   /**
    * Whether an overlay with a spinner should be visible
@@ -246,6 +247,16 @@ export class GridComponent implements OnInit, AfterViewInit {
   }
 
   @Input()
+  set showToday(value: boolean) {
+    this._showToday = value;
+    this.updateVisibleDays();
+  }
+
+  get showToday(): boolean {
+    return this._showToday;
+  }
+
+  @Input()
   set workingDaysStart(value: number) {
     this._workingDaysStart = value;
     this.updateVisibleDays();
@@ -319,9 +330,9 @@ export class GridComponent implements OnInit, AfterViewInit {
   }
 
   updateVisibleDays(): void {
-    this.visibleDaysStart = this.hideWeekend ? this.workingDaysStart : 0;
-    this.visibleDaysEnd = this.hideWeekend ? this.workingDaysEnd : 6;
-    this.updateAddHints();
+      this.visibleDaysStart = this.hideWeekend ? this.workingDaysStart : 0;
+      this.visibleDaysEnd = this.hideWeekend ? this.workingDaysEnd : 6;
+      this.updateAddHints();
   }
 
   worklogPanelTrackByFn(index: number, item: Worklog): string {

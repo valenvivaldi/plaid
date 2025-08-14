@@ -35,6 +35,7 @@ export class PlaidComponent implements OnInit {
   hideWeekend: boolean;
   refreshIntervalMinutes: number;
   theme: Theme;
+  showToday: boolean;
 
   constructor(
     private systemPreferencesService: SystemPreferencesService, // Injected service early to run its constructor
@@ -61,6 +62,7 @@ export class PlaidComponent implements OnInit {
     this.userPreferencesService.getHideWeekend$().subscribe(value => this.hideWeekend = value);
     this.userPreferencesService.getRefreshIntervalMinutes$().subscribe(value => this.refreshIntervalMinutes = value);
     this.userPreferencesService.getTheme$().subscribe(value => this.theme = value);
+    this.userPreferencesService.getShowToday$().subscribe(value => this.showToday = value);
   }
 
   setVisibleDateRange(dateRange: DateRange): void {
@@ -87,6 +89,10 @@ export class PlaidComponent implements OnInit {
 
   setWorkingHoursEndMinutes(value: number): void {
     this.userPreferencesService.setWorkingHoursEndMinutes(value);
+  }
+
+  setShowToday(value: boolean): void {
+    this.userPreferencesService.setShowToday(value);
   }
 
   setWorkingDaysStart(value: number): void {

@@ -36,8 +36,17 @@ export class SettingsComponent {
   @Output() refreshIntervalMinutesChange = new EventEmitter<number>();
   @Input()  theme: Theme;
   @Output() themeChange = new EventEmitter<Theme>();
+  @Input() showToday: boolean;
+  @Output() showTodayChange = new EventEmitter<boolean>();
 
   constructor(private ref: ElementRef, private cdr: ChangeDetectorRef) {
+  }
+
+  setShowToday(value: boolean) {
+    if (this.showToday !== value && this.showToday !== undefined) {
+      this.showTodayChange.emit(value);
+    }
+    this.showToday = value;
   }
 
   setWorkingHoursStartMinutes(value: number) {
@@ -128,7 +137,7 @@ export class SettingsComponent {
     return this._dropdownOpen;
   }
 
-  minutesToTimeString(minutesSinceMidnight: number): string {
+  minutesToTimeString(minutesSinceMidnight: number): string | null {
     if (minutesSinceMidnight == null) {
       return null;
     }
@@ -137,7 +146,7 @@ export class SettingsComponent {
     return (hours <= 9 ? '0' : '') + hours.toString() + ':' + (minutes <= 9 ? '0' : '') + minutes.toString();
   }
 
-  timeStringToMinutes(timeString: string): number {
+  timeStringToMinutes(timeString: string): number | null {
     if (!timeString) {
       return null;
     }
