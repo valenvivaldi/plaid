@@ -12,6 +12,8 @@ export class UserPreferencesService {
   private readonly HIDE_WEEKEND = 'HIDE_WEEKEND';
   private readonly REFRESH_INTERVAL = 'REFRESH_INTERVAL';
   private readonly THEME = 'THEME';
+  private readonly DAYS_SHOWN = 'DAYS_SHOWN';
+  private readonly SHOW_TODAY = 'SHOW_TODAY';
   private readonly FAVORITE_KEYS = 'FAVORITE_KEYS';
 
   private workingHoursStartMinutes: BehaviorSubject<number> =
@@ -34,6 +36,7 @@ export class UserPreferencesService {
     new BehaviorSubject<number>(Number(localStorage.getItem(this.REFRESH_INTERVAL) || 0));
   private theme: BehaviorSubject<Theme> =
     new BehaviorSubject<Theme>((localStorage.getItem(this.THEME) || 'system') as Theme);
+  private showToday: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(localStorage.getItem(this.SHOW_TODAY) === '1');
   private favoriteKeys: BehaviorSubject<FavoriteKeys> =
     new BehaviorSubject<FavoriteKeys>((JSON.parse(localStorage.getItem(this.FAVORITE_KEYS) || '{}')) as FavoriteKeys);
 
@@ -57,7 +60,12 @@ export class UserPreferencesService {
 
   setWorkingDaysStart(value: number): void {
     this.workingDaysStart.next(value);
-    if (this.hideWeekend.getValue()) {
+    if (this.showToday.getValue()) {
+      // When showToday is true, update visible days to reflect the single day
+      const singleDay = this.getVisibleDaysStartForShowToday();
+      this.visibleDaysStart.next(singleDay);
+      this.visibleDaysEnd.next(singleDay);
+    } else if (this.hideWeekend.getValue()) {
       this.visibleDaysStart.next(value);
     }
     localStorage.setItem(this.WORKING_DAYS_START, value.toString());
@@ -68,6 +76,9 @@ export class UserPreferencesService {
   }
 
   getVisibleDaysStart(): number {
+    if (this.showToday.getValue()) {
+      return this.getVisibleDaysStartForShowToday();
+    }
     return this.visibleDaysStart.getValue();
   }
 
@@ -77,7 +88,12 @@ export class UserPreferencesService {
 
   setWorkingDaysEnd(value: number): void {
     this.workingDaysEnd.next(value);
-    if (this.hideWeekend.getValue()) {
+    if (this.showToday.getValue()) {
+      // When showToday is true, update visible days to reflect the single day
+      const singleDay = this.getVisibleDaysStartForShowToday();
+      this.visibleDaysStart.next(singleDay);
+      this.visibleDaysEnd.next(singleDay);
+    } else if (this.hideWeekend.getValue()) {
       this.visibleDaysEnd.next(value);
     }
     localStorage.setItem(this.WORKING_DAYS_END, value.toString());
@@ -88,6 +104,9 @@ export class UserPreferencesService {
   }
 
   getVisibleDaysEnd(): number {
+    if (this.showToday.getValue()) {
+      return this.getVisibleDaysEndForShowToday();
+    }
     return this.visibleDaysEnd.getValue();
   }
 
@@ -97,11 +116,18 @@ export class UserPreferencesService {
 
   setHideWeekend(value: boolean): void {
     this.hideWeekend.next(value);
-    if (this.workingDaysStart.getValue() !== 0) {
-      this.visibleDaysStart.next(value ? this.workingDaysStart.getValue() : 0);
-    }
-    if (this.workingDaysEnd.getValue() !== 6) {
-      this.visibleDaysEnd.next(value ? this.workingDaysEnd.getValue() : 6);
+    if (this.showToday.getValue()) {
+      // When showToday is true, update visible days to reflect the single day
+      const singleDay = this.getVisibleDaysStartForShowToday();
+      this.visibleDaysStart.next(singleDay);
+      this.visibleDaysEnd.next(singleDay);
+    } else {
+      if (this.workingDaysStart.getValue() !== 0) {
+        this.visibleDaysStart.next(value ? this.workingDaysStart.getValue() : 0);
+      }
+      if (this.workingDaysEnd.getValue() !== 6) {
+        this.visibleDaysEnd.next(value ? this.workingDaysEnd.getValue() : 6);
+      }
     }
     localStorage.setItem(this.HIDE_WEEKEND, value ? '1' : '0');
   }
@@ -128,6 +154,33 @@ export class UserPreferencesService {
     localStorage.setItem(this.THEME, value);
   }
 
+  getShowToday$(): Observable<boolean> {
+    return this.showToday.asObservable();
+  }
+
+  setShowToday(value: boolean): void {
+    this.showToday.next(value);
+    localStorage.setItem(this.SHOW_TODAY, value.toString());
+    
+    // When showToday changes, we need to update the visible days
+    // This will trigger the AppStateService to recalculate the date range
+    if (value) {
+      // When enabling showToday, update visible days to reflect the single day
+      const singleDay = this.getVisibleDaysStartForShowToday();
+      this.visibleDaysStart.next(singleDay);
+      this.visibleDaysEnd.next(singleDay);
+    } else {
+      // When disabling showToday, restore normal visible days based on hideWeekend
+      if (this.hideWeekend.getValue()) {
+        this.visibleDaysStart.next(this.workingDaysStart.getValue());
+        this.visibleDaysEnd.next(this.workingDaysEnd.getValue());
+      } else {
+        this.visibleDaysStart.next(0);
+        this.visibleDaysEnd.next(6);
+      }
+    }
+  }
+
   getFavoriteKeys$(): Observable<FavoriteKeys> {
     return this.favoriteKeys.asObservable();
   }
@@ -135,5 +188,28 @@ export class UserPreferencesService {
   setFavoriteKeys(value: FavoriteKeys): void {
     this.favoriteKeys.next(value);
     localStorage.setItem(this.FAVORITE_KEYS, JSON.stringify(value));
+  }
+
+  private getVisibleDaysStartForShowToday(): number {
+    const today = new Date().getDay();
+    const workingDaysStart = this.workingDaysStart.getValue();
+    const workingDaysEnd = this.workingDaysEnd.getValue();
+    
+    // If today is a working day, return today
+    if (today >= workingDaysStart && today <= workingDaysEnd) {
+      return today;
+    }
+    
+    // If today is not a working day, find the next working day
+    let nextWorkingDay = today;
+    while (nextWorkingDay < workingDaysStart || nextWorkingDay > workingDaysEnd) {
+      nextWorkingDay = (nextWorkingDay + 1) % 7;
+    }
+    return nextWorkingDay;
+  }
+
+  private getVisibleDaysEndForShowToday(): number {
+    // When showToday is true, start and end should be the same day
+    return this.getVisibleDaysStartForShowToday();
   }
 }

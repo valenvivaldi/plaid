@@ -6,6 +6,18 @@
   <ng-content></ng-content>
 
   <div class="field-set">
+    <label>Show only current day</label>
+    <select
+            class="input wide-dropdown"
+            [tabIndex]="dropdownOpen ? 0 : -1"
+            [ngModel]="showToday ? 1 : 0"
+            (ngModelChange)="setShowToday($event == 1)"
+    >
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
+</div>
+  <div class="field-set">
     <label>Working hours</label>
     <input
       class="input time-input"
