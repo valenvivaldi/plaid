@@ -21,6 +21,7 @@ import {Issue} from '../../../model/issue';
 import {IssuePickerCloudComponent} from './issue-picker-cloud/issue-picker-cloud.component';
 import {Subject} from 'rxjs';
 import {IssueApi} from '../../../core/issue/issue.api';
+import {WorklogApi} from '../../../core/worklog/worklog.api';
 
 /**
  * Smart component, presenting edited worklog, handling all its interactions and updating worklog on the server
@@ -170,7 +171,7 @@ export class WorklogEditorComponent implements OnInit {
       this.editedPanelInRange = this.date >= this.dateRange.start && this.date <= this.dateRange.end;
       this.updatePanelHueSaturationAndIssueString(worklog.issue);
       this.dateString = Format.date(this.start);
-      this.commentString = worklog.comment ?? '**Avances del dia de hoy**\n\n\n**En que punto estamos**\n\n';
+      this.commentString = this.worklogApi.extractTextFromAdf(worklog.comment ?? '**Avances del dia de hoy**\n\n\n**En que punto estamos**\n\n');
       if (this.editedPanelInRange) {
         this.computeSizeAndOffset();
       }
@@ -237,7 +238,8 @@ export class WorklogEditorComponent implements OnInit {
     private authFacade: AuthFacade,
     private worklogFacade: WorklogFacade,
     private appStateService: AppStateService,
-    private issueApi: IssueApi
+    private issueApi: IssueApi,
+    private worklogApi: WorklogApi
   ) {
   }
 

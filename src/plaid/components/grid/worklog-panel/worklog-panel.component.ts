@@ -14,6 +14,7 @@ import {Worklog} from '../../../model/worklog';
 import {WorklogPanelsManagerService} from './worklog-panels-manager.service';
 import {Format} from '../../../helpers/format';
 import {AuthFacade} from '../../../core/auth/auth.facade';
+import {WorklogApi} from '../../../core/worklog/worklog.api';
 
 /**
  * Somewhat dumb component, present a panel representing a work log entry, or a gap prompting user to add a work log
@@ -83,6 +84,13 @@ export class WorklogPanelComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Gets the comment text, extracting from ADF if necessary
+   */
+  get commentText(): string {
+    return this.worklogApi.extractTextFromAdf(this.worklog.comment ?? '').trim();
+  }
+
+  /**
    * In how many vertical pixels is one minute represented. Changing it will update panel's position and size, and
    * schedule size and position check (see checkSizeAndPosition).
    */
@@ -119,7 +127,8 @@ export class WorklogPanelComponent implements OnInit, OnDestroy {
   constructor(
     private authFacade: AuthFacade,
     private cdr: ChangeDetectorRef,
-    private manager: WorklogPanelsManagerService
+    private manager: WorklogPanelsManagerService,
+    private worklogApi: WorklogApi
   ) { }
 
   ngOnInit(): void {

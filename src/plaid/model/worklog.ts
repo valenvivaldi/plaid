@@ -1,11 +1,28 @@
 import {User} from './user';
 import {Issue} from './issue';
 
+// ADF (Atlassian Document Format) for comments in v3 API
+export interface AdfDocument {
+  type: 'doc';
+  version: 1;
+  content: AdfContent[];
+}
+
+export interface AdfContent {
+  type: string;
+  content?: AdfText[];
+}
+
+export interface AdfText {
+  type: 'text';
+  text: string;
+}
+
 export interface Worklog {
   self?: string;
   author?: User;
   updateAuthor?: User;
-  comment?: string;
+  comment?: string | AdfDocument; // Support both string (v2) and ADF (v3)
   created?: string;
   updated?: string;
   visibility?: any;
