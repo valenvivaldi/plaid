@@ -69,6 +69,13 @@ export class IssuePickerCloudComponent implements OnInit {
   @Input()
   assignee: string;
 
+  /**
+   * Whether to auto-select the first suggestion. Default is true for backward compatibility.
+   * Set to false when you want manual selection only (e.g., in multi-select scenarios).
+   */
+  @Input()
+  autoSelectFirstSuggestion = true;
+
   constructor(private issueFacade: IssueFacade, private cdr: ChangeDetectorRef) {
   }
 
@@ -106,10 +113,12 @@ export class IssuePickerCloudComponent implements OnInit {
     });
     this.issueFacade.getSuggestions$().subscribe(suggestions => {
       this.suggestions = suggestions;
-      if (suggestions.length > 0) {
-        this.issueChange.emit(suggestions[0]);
-      } else {
-        this.issueChange.emit(undefined);
+      if (this.autoSelectFirstSuggestion) {
+        if (suggestions.length > 0) {
+          this.issueChange.emit(suggestions[0]);
+        } else {
+          this.issueChange.emit(undefined);
+        }
       }
       this.cdr.detectChanges();
     });

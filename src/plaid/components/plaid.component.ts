@@ -44,6 +44,7 @@ export class PlaidComponent implements OnInit {
   quickLogProblemsEnabled: boolean;
   quickLogNextDayTaskCode: string;
   quickLogProblemsTaskCode: string;
+  quickLogTimeMinutes: number;
   
   // Worklog configuration
   worklogDefaultTemplate: string;
@@ -82,6 +83,7 @@ export class PlaidComponent implements OnInit {
     this.userPreferencesService.getQuickLogProblemsEnabled$().subscribe(value => this.quickLogProblemsEnabled = value);
     this.userPreferencesService.getQuickLogNextDayTaskCode$().subscribe(value => this.quickLogNextDayTaskCode = value);
     this.userPreferencesService.getQuickLogProblemsTaskCode$().subscribe(value => this.quickLogProblemsTaskCode = value);
+    this.userPreferencesService.getQuickLogTimeMinutes$().subscribe(value => this.quickLogTimeMinutes = value);
     
     // Worklog configuration subscriptions
     this.userPreferencesService.getWorklogDefaultTemplate$().subscribe(value => this.worklogDefaultTemplate = value);
@@ -160,6 +162,10 @@ export class PlaidComponent implements OnInit {
 
   setQuickLogProblemsTaskCode(value: string): void {
     this.userPreferencesService.setQuickLogProblemsTaskCode(value);
+  }
+
+  setQuickLogTimeMinutes(value: number): void {
+    this.userPreferencesService.setQuickLogTimeMinutes(value);
   }
 
   // Worklog configuration setters

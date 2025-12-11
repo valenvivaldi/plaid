@@ -2,8 +2,8 @@
   <p
     class="parent-name"
     *ngIf="issue.fields.parent"
-    [plaidExtHref]="jiraURL != null ? jiraURL + '/browse/' + issue.fields.parent.key : null"
-    [title]="jiraURL != null ? 'Show parent issue' : ''"
+    (contextmenu)="showContextMenu($event, issue.fields.parent.key)"
+    [title]="'Right-click to open in Jira'"
   >
     <svg class="icon-parent"><use href="assets/icons.svg#parent"></use></svg>
     <b>{{ issue.fields.parent.key }}</b>
@@ -11,8 +11,8 @@
   </p>
   <p
     class="name"
-    [plaidExtHref]="jiraURL != null ? jiraURL + '/browse/' + issue.key : null"
-    [title]="jiraURL != null ? 'Show issue' : ''"
+    (contextmenu)="showContextMenu($event, issue.key)"
+    [title]="'Right-click to open in Jira'"
   >
     <b>{{ issue.key }}</b>
     {{ issue.fields.summary }}
@@ -36,3 +36,23 @@
     {{ getComponents() }}
   </p>
 </ng-container>
+
+<!-- Menú contextual -->
+<div 
+  *ngIf="contextMenuVisible" 
+  class="context-menu"
+  [style.left.px]="contextMenuX"
+  [style.top.px]="contextMenuY"
+  (click)="openInJira()"
+>
+  <div class="context-menu-item">
+    🌐 Open in Jira
+  </div>
+</div>
+
+<!-- Overlay para cerrar el menú -->
+<div 
+  *ngIf="contextMenuVisible" 
+  class="context-menu-overlay"
+  (click)="hideContextMenu()"
+></div>

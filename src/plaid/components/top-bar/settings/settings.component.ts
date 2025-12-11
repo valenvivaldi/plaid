@@ -52,6 +52,8 @@ export class SettingsComponent {
   @Output() quickLogNextDayTaskCodeChange = new EventEmitter<string>();
   @Input() quickLogProblemsTaskCode: string;
   @Output() quickLogProblemsTaskCodeChange = new EventEmitter<string>();
+  @Input() quickLogTimeMinutes: number;
+  @Output() quickLogTimeMinutesChange = new EventEmitter<number>();
 
   // Worklog default template configuration
   @Input() worklogDefaultTemplate: string;
@@ -107,6 +109,13 @@ export class SettingsComponent {
       this.quickLogProblemsTaskCodeChange.emit(value);
     }
     this.quickLogProblemsTaskCode = value;
+  }
+
+  setQuickLogTimeMinutes(value: number) {
+    if (this.quickLogTimeMinutes !== value && this.quickLogTimeMinutes !== undefined) {
+      this.quickLogTimeMinutesChange.emit(value);
+    }
+    this.quickLogTimeMinutes = value;
   }
 
   setWorklogDefaultTemplate(value: string) {

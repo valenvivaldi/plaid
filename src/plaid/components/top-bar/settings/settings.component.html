@@ -108,8 +108,27 @@
   <div class="section-divider"></div>
   <div class="section-title">⚡ Quick Log</div>
   
+  <!-- Quick Log Time Configuration -->
   <div class="field-set">
-    <label for="quick-log-next-day">Next day tasks</label>
+    <label for="quick-log-time">⏰ Quick Log time (for both tasks and problems)</label>
+    <div class="time-input-wrapper">
+      <input
+        id="quick-log-time"
+        class="input time-input"
+        type="time"
+        [tabIndex]="dropdownOpen ? 0 : -1"
+        [ngModel]="minutesToTimeString(quickLogTimeMinutes)"
+        (ngModelChange)="setQuickLogTimeMinutes(timeStringToMinutes($event))"
+      />
+    </div>
+  </div>
+
+  <!-- Next Day Tasks Section -->
+  <div class="subsection-divider"></div>
+  <div class="subsection-title">📋 Next Day Tasks</div>
+  
+  <div class="field-set">
+    <label for="quick-log-next-day">Status</label>
     <select
       id="quick-log-next-day"
       class="input wide-dropdown"
@@ -123,7 +142,7 @@
   </div>
   
   <div class="field-set" *ngIf="quickLogNextDayEnabled">
-    <label for="quick-log-next-day-message">Default message (tasks)</label>
+    <label for="quick-log-next-day-message">Default message</label>
     <input
       id="quick-log-next-day-message"
       class="input wide-input"
@@ -148,8 +167,12 @@
     />
   </div>
   
+  <!-- Problems Found Section -->
+  <div class="subsection-divider"></div>
+  <div class="subsection-title">🚨 Problems Found</div>
+  
   <div class="field-set">
-    <label for="quick-log-problems">Problems found</label>
+    <label for="quick-log-problems">Status</label>
     <select
       id="quick-log-problems"
       class="input wide-dropdown"
@@ -163,7 +186,7 @@
   </div>
   
   <div class="field-set" *ngIf="quickLogProblemsEnabled">
-    <label for="quick-log-problems-message">Default message (problems)</label>
+    <label for="quick-log-problems-message">Default message</label>
     <input
       id="quick-log-problems-message"
       class="input wide-input"

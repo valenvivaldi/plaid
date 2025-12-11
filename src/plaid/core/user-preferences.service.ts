@@ -21,6 +21,7 @@ export class UserPreferencesService {
   private readonly QUICK_LOG_PROBLEMS_ENABLED = 'QUICK_LOG_PROBLEMS_ENABLED';
   private readonly QUICK_LOG_NEXT_DAY_TASK_CODE = 'QUICK_LOG_NEXT_DAY_TASK_CODE';
   private readonly QUICK_LOG_PROBLEMS_TASK_CODE = 'QUICK_LOG_PROBLEMS_TASK_CODE';
+  private readonly QUICK_LOG_TIME_MINUTES = 'QUICK_LOG_TIME_MINUTES';
   private readonly WORKLOG_DEFAULT_TEMPLATE = 'WORKLOG_DEFAULT_TEMPLATE';
 
   private workingHoursStartMinutes: BehaviorSubject<number> =
@@ -60,6 +61,8 @@ export class UserPreferencesService {
     new BehaviorSubject<string>(localStorage.getItem(this.QUICK_LOG_NEXT_DAY_TASK_CODE) || '');
   private quickLogProblemsTaskCode: BehaviorSubject<string> = 
     new BehaviorSubject<string>(localStorage.getItem(this.QUICK_LOG_PROBLEMS_TASK_CODE) || '');
+  private quickLogTimeMinutes: BehaviorSubject<number> = 
+    new BehaviorSubject<number>(Number(localStorage.getItem(this.QUICK_LOG_TIME_MINUTES) || 540));
   
   // Worklog default template configuration
   private worklogDefaultTemplate: BehaviorSubject<string> = 
@@ -67,7 +70,8 @@ export class UserPreferencesService {
       const saved = localStorage.getItem(this.WORKLOG_DEFAULT_TEMPLATE);
       const defaultValue = '**Avances del dia de hoy**\n\n\n**En que punto estamos**\n\n';
       console.log('Initializing worklog template. Saved value:', saved);
-      return saved || defaultValue;
+      // Use saved value even if empty string, only use default if null (not saved yet)
+      return saved !== null ? saved : defaultValue;
     })());
 
   setWorkingHoursStartMinutes(value: number): void {
@@ -296,6 +300,15 @@ export class UserPreferencesService {
 
   getQuickLogProblemsTaskCode$(): Observable<string> {
     return this.quickLogProblemsTaskCode.asObservable();
+  }
+
+  setQuickLogTimeMinutes(value: number): void {
+    this.quickLogTimeMinutes.next(value);
+    localStorage.setItem(this.QUICK_LOG_TIME_MINUTES, value.toString());
+  }
+
+  getQuickLogTimeMinutes$(): Observable<number> {
+    return this.quickLogTimeMinutes.asObservable();
   }
 
   // Worklog default template configuration methods

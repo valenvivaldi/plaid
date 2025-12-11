@@ -125,8 +125,16 @@ export class QuickLogService {
           : this.userPreferencesService.getQuickLogProblemsTaskCode$();
 
         taskCodeObservable.pipe(take(1)).subscribe(taskCode => {
-          const now = new Date();
-          let worklog: Partial<Worklog>;
+          // Get configured time for quick log
+          this.userPreferencesService.getQuickLogTimeMinutes$().pipe(take(1)).subscribe(quickLogTimeMinutes => {
+            const now = new Date();
+            
+            // Set time to configured hour and minute (default is 9:00 AM)
+            const hours = Math.floor(quickLogTimeMinutes / 60);
+            const minutes = quickLogTimeMinutes % 60;
+            now.setHours(hours, minutes, 0, 0);
+            
+            let worklog: Partial<Worklog>;
 
           if (taskCode && taskCode.trim()) {
             // Create 1-minute worklog in the configured task
@@ -176,7 +184,8 @@ export class QuickLogService {
                 observer.error(error);
               }
             });
-        });
+          }); // End of quickLogTimeMinutes subscription
+        }); // End of taskCode subscription
       });
     });
   }
