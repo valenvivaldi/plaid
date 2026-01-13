@@ -173,6 +173,7 @@ Ctrl to snap to 60 minutes."
       (issueChange)="selectIssue($event)"
       [updateFavoritesAndSuggestionsAndEmitSuggestion]="updateFavoriteIssuesAndSuggestionsAndEmitSuggestion.asObservable()"
       [assignee]="selectedOwner"
+      [autoSelectFirstSuggestion]="false"
       title=""
       [keysDisabled]="keysDisabled"
     ></plaid-issue-picker-cloud>

@@ -29,13 +29,17 @@
         [keyboardNavigationEnabled]="open && !keysDisabled"
       ></plaid-issue-list-item>
     </ng-container>
-    <div class="section-header" *ngIf="suggestionsToShow.length > 0">Suggestions</div>
-    <plaid-issue-list-item
-      *ngFor="let res of suggestionsToShow"
-      [issue]="res"
-      (issueSelected)="issueSelected(res);"
-      (favoriteChange)="favoriteChange(res, $event)"
-      [keyboardNavigationEnabled]="open && !keysDisabled"
-    ></plaid-issue-list-item>
+    
+    <!-- Group suggestions by status -->
+    <ng-container *ngFor="let group of suggestionsByStatus">
+      <div class="section-header" *ngIf="group.issues.length > 0">{{ group.status }}</div>
+      <plaid-issue-list-item
+        *ngFor="let res of group.issues"
+        [issue]="res"
+        (issueSelected)="issueSelected(res);"
+        (favoriteChange)="favoriteChange(res, $event)"
+        [keyboardNavigationEnabled]="open && !keysDisabled"
+      ></plaid-issue-list-item>
+    </ng-container>
   </div>
 </div>

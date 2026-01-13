@@ -8,7 +8,6 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0.5;
-  cursor: context-menu;
 
   .icon-parent {
     margin-right: 4px;
@@ -27,7 +26,31 @@ p {
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin-bottom: 3px;
-  cursor: context-menu;
+}
+
+.issue-key-clickable {
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+  
+  &:hover {
+    color: #ffc107;
+    text-decoration: underline;
+  }
+  
+  &:active {
+    color: #c7a100;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      color: #ffd54f;
+    }
+    
+    &:active {
+      color: #ffca28;
+    }
+  }
 }
 
 .fields {
@@ -70,48 +93,6 @@ p {
   }
 }
 
-// Estilos para el menú contextual
-.context-menu {
-  position: fixed;
-  background: #ffffff;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 140px;
-  overflow: hidden;
-}
-
-.context-menu-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  color: #333333;
-  
-  &:hover {
-    background-color: #f5f5f5;
-  }
-}
-
-.context-menu-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-  fill: currentColor;
-}
-
-.context-menu-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999;
-  background: transparent;
-}
-
 // Dark theme support
 @media (prefers-color-scheme: dark) {
   :host {
@@ -128,19 +109,5 @@ p {
 
   .fields {
     color: #b0b0b0;
-  }
-
-  .context-menu {
-    background: #2d2d2d;
-    border-color: #555555;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .context-menu-item {
-    color: #cccccc;
-    
-    &:hover {
-      background-color: #404040;
-    }
   }
 }

@@ -61,6 +61,38 @@
   small {
     color: var(--color-gray-4);
   }
+
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 10px;
+    border: 1px solid var(--color-gray-2);
+    border-radius: 4px;
+    background: var(--color-gray-0);
+    resize: vertical;
+  }
+
+  .html-error-container {
+    max-height: 400px;
+    overflow: auto;
+    border: 1px solid var(--color-gray-2);
+    border-radius: 4px;
+    background: #fff;
+    padding: 0;
+    
+    // Reset styles para que el HTML renderizado se vea correctamente
+    font-size: 14px;
+    line-height: 1.5;
+    
+    // Hacer que sea scrolleable
+    iframe {
+      border: 0;
+      width: 100%;
+      min-height: 400px;
+    }
+  }
 }
 
 .modal-footer {

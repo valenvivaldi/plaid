@@ -2,19 +2,13 @@
   <p
     class="parent-name"
     *ngIf="issue.fields.parent"
-    (contextmenu)="showContextMenu($event, issue.fields.parent.key)"
-    [title]="'Right-click to open in Jira'"
   >
     <svg class="icon-parent"><use href="assets/icons.svg#parent"></use></svg>
-    <b>{{ issue.fields.parent.key }}</b>
+    <b class="issue-key-clickable" (click)="openIssueInJira($event, issue.fields.parent.key)" [title]="'Click to open in Jira'">{{ issue.fields.parent.key }}</b>
     {{ issue.fields.parent.fields.summary }}
   </p>
-  <p
-    class="name"
-    (contextmenu)="showContextMenu($event, issue.key)"
-    [title]="'Right-click to open in Jira'"
-  >
-    <b>{{ issue.key }}</b>
+  <p class="name">
+    <b class="issue-key-clickable" (click)="openIssueInJira($event, issue.key)" [title]="'Click to open in Jira'">{{ issue.key }}</b>
     {{ issue.fields.summary }}
   </p>
   <p class="fields">
@@ -37,22 +31,4 @@
   </p>
 </ng-container>
 
-<!-- Menú contextual -->
-<div 
-  *ngIf="contextMenuVisible" 
-  class="context-menu"
-  [style.left.px]="contextMenuX"
-  [style.top.px]="contextMenuY"
-  (click)="openInJira()"
->
-  <div class="context-menu-item">
-    🌐 Open in Jira
-  </div>
-</div>
 
-<!-- Overlay para cerrar el menú -->
-<div 
-  *ngIf="contextMenuVisible" 
-  class="context-menu-overlay"
-  (click)="hideContextMenu()"
-></div>

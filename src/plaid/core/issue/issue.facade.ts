@@ -39,16 +39,17 @@ export class IssueFacade {
       const jql = `assignee = "${assignee}" and status not in (Done, Closed) order by updatedDate desc`;
       console.debug('[IssueFacade] getSuggestionsFromApi$ - assignee:', assignee, 'jql:', jql);
       return this.issueApi
-        .search$(jql).pipe(
+        .search$(jql, 50).pipe(
           map(res => res.issues || [])
         );
     }
 
-    // No assignee specified: suggestions based on current user activity
-    const jqlCurrent = `(status changed by currentUser() OR creator = currentUser()) AND assignee = currentUser() and status not in (Done, Closed) order by updatedDate desc`;
+    // No assignee specified: get ALL tasks assigned to current user (excluding Done/Closed/Won't Fix)
+    // This includes bugs, stories, tasks, etc., regardless of who created or changed them
+    const jqlCurrent = `assignee = currentUser() and status not in (Done, Closed, "WON'T FIX") order by status ASC, updated DESC`;
     console.debug('[IssueFacade] getSuggestionsFromApi$ - current user jql:', jqlCurrent);
     return this.issueApi
-      .search$(jqlCurrent).pipe(
+      .search$(jqlCurrent, 50).pipe(
         map(res => res.issues || [])
       );
   }

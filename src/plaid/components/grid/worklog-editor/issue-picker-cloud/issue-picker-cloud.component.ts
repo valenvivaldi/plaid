@@ -160,15 +160,58 @@ export class IssuePickerCloudComponent implements OnInit {
   }
 
   get suggestionsToShow(): Issue[] {
-    // When no assignee is selected (empty string or null), show current user's suggestions without favorites
-    // When specific assignee is selected, show all suggestions for that assignee
-    if (!this.assignee || this.assignee.trim() === '') {
-      // Current user: show suggestions that aren't already in favorites
-      return this.suggestionsWithoutFavorites;
-    } else {
-      // Specific assignee: show all suggestions for that user
-      return this.suggestions;
-    }
+    // Show all suggestions (including favorites) organized by status
+    // Favorites will appear both in "Favorites" section and in their status section
+    return this.suggestions;
+  }
+
+  /**
+   * Groups suggestions by status for organized display
+   */
+  get suggestionsByStatus(): { status: string; statusOrder: number; issues: Issue[] }[] {
+    const toShow = this.suggestionsToShow;
+    
+    // Define status priority order (like Jira's workflow)
+    // Using case-insensitive matching for flexibility
+    const statusPriority: { [key: string]: number } = {
+      'IN REVIEW': 1,
+      'IN PROGRESS': 2,
+      'QA': 3,
+      'BLOCKED': 4,
+      'TO DO': 5,
+      'BACKLOG': 6,
+      "WON'T FIX": 7
+    };
+
+    // Group issues by status
+    const grouped = new Map<string, Issue[]>();
+    toShow.forEach(issue => {
+      const status = issue.fields?.status?.name || 'NO STATUS';
+      if (!grouped.has(status)) {
+        grouped.set(status, []);
+      }
+      grouped.get(status)!.push(issue);
+    });
+
+    // Convert to array and sort by status priority
+    const result = Array.from(grouped.entries()).map(([status, issues]) => {
+      const normalizedStatus = status.toUpperCase();
+      return {
+        status,
+        statusOrder: statusPriority[normalizedStatus] || 999,
+        issues
+      };
+    });
+
+    // Sort groups by priority, then alphabetically for unlisted statuses
+    result.sort((a, b) => {
+      if (a.statusOrder !== b.statusOrder) {
+        return a.statusOrder - b.statusOrder;
+      }
+      return a.status.localeCompare(b.status);
+    });
+
+    return result;
   }
 
 }

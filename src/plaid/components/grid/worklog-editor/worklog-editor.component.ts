@@ -600,6 +600,17 @@ export class WorklogEditorComponent implements OnInit {
       this.computeSizeAndOffset();
 
       const mousedownOutsideIssuePickerEventListener = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        
+        // Don't close if clicking on favorite star button (check for icon-star or its parent with both button class and star icon)
+        const clickedFavoriteStar = target.closest('.icon-star') || 
+                                    (target.classList.contains('icon-star')) ||
+                                    (target.tagName === 'use' && target.closest('.icon-star'));
+        
+        if (clickedFavoriteStar) {
+          return;
+        }
+        
         if (!(this.issuePickerCloud.element.nativeElement as Node).contains(event.target as Node)
           && event.target !== this.issuePickerToggle.nativeElement) {
           this.issuePickerOpen = false;
@@ -712,8 +723,13 @@ export class WorklogEditorComponent implements OnInit {
    * Handles issue selection action from issue picker.
    */
   selectIssue(issue?: Issue | null): void {
-    // If no issue provided, clear issue selection and return
+    // If no issue provided and we're in adding mode, just ignore (don't clear)
     if (!issue) {
+      if (this.adding) {
+        // In adding mode, ignore undefined emissions until user makes a selection
+        return;
+      }
+      // Only clear if we're editing an existing worklog
       if (this._worklog) {
         this._worklog.issue = undefined;
         this._worklog.issueId = undefined as any;

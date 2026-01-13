@@ -139,7 +139,7 @@ export class QuickLogService {
           if (taskCode && taskCode.trim()) {
             // Create 1-minute worklog in the configured task
             worklog = {
-              comment: `[${type === 'next-day-tasks' ? 'NEXT DAY TASKS' : 'PROBLEMS'}] ${comment}`,
+              comment: comment,
               started: now.toISOString(),
               timeSpentSeconds: 60, // 1 minute
               author: currentUser,
@@ -154,7 +154,7 @@ export class QuickLogService {
           } else {
             // Fallback to generic quick log (original behavior)
             worklog = {
-              comment: `[${type === 'next-day-tasks' ? 'NEXT DAY TASKS' : 'PROBLEMS'}] ${comment}`,
+              comment: comment,
               started: now.toISOString(),
               timeSpentSeconds: 60, // 1 minute
               author: currentUser,

@@ -4,7 +4,8 @@
   </div>
   <div class="modal-body">
     <p>{{ error ? error.message : null }}</p>
-    <textarea [value]="applicationErrorBody" disabled></textarea>
+    <div *ngIf="isHtmlError" class="html-error-container" [innerHTML]="sanitizedHtmlError"></div>
+    <textarea *ngIf="!isHtmlError" [value]="applicationErrorBody" disabled></textarea>
   </div>
   <div class="modal-footer">
     <button
