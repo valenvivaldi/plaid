@@ -28,6 +28,10 @@ function createWindow(dev) {
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      // Electron >= 12 defaults contextIsolation to true, which hides `window.require`
+      // from the renderer's main world and breaks ElectronService (shell.openExternal,
+      // ipcRenderer, etc). Keep it false to preserve the pre-Electron-12 behavior.
+      contextIsolation: false,
       enableRemoteModule: true,
       webSecurity: false
     }
