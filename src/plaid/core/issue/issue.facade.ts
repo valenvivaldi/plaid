@@ -3,7 +3,7 @@ import {Observable, of, zip} from 'rxjs';
 import {Issue} from '../../model/issue';
 import {Transition} from '../../model/transition';
 import {IssueApi} from './issue.api';
-import {map, switchMap, tap} from 'rxjs/operators';
+import {catchError, map, switchMap, tap} from 'rxjs/operators';
 import {IssueState} from './issue.state';
 import {AuthFacade} from '../auth/auth.facade';
 import {UserPreferencesService} from '../user-preferences.service';
@@ -72,7 +72,8 @@ export class IssueFacade {
         this.favoriteKeys[this.authFacade.getJiraURL()] =
           keys.filter((key: string, index: number) => !removedKeysIndexes.includes(index));
         this.userPrefsService.setFavoriteKeys(this.favoriteKeys);
-      })
+      }),
+      catchError(() => of(this.favorites || []))
     );
   }
 

@@ -57,6 +57,7 @@ export class WorklogFacade {
         this.fetchWorklogsVerbose();
       } else {
         this.worklogState.setWorklogs([]);
+        this.reschedulePeriodicRefreshing();
       }
     });
 
@@ -86,12 +87,23 @@ export class WorklogFacade {
   private streamAllWorklogsForIssue$(issue: Issue): Observable<Worklog[]> {
     return this.worklogApi.getWorklogsForIssue$(issue.id).pipe(
       expand(
-        (results: WorklogWithPagination) => (results.startAt + results.worklogs.length) < results.total
+        (results: WorklogWithPagination) => results.worklogs.length > 0 && (results.startAt + results.worklogs.length) < results.total
           ? this.worklogApi.getWorklogsForIssue$(issue.id, results.startAt + results.worklogs.length)
           : EMPTY
       ),
       map<WorklogWithPagination, Worklog[]>(results => results.worklogs.map(wl => ({...wl, issue})))
     );
+  }
+
+  /**
+   * Whether a worklog belongs to the authenticated user. accountId is stable across Jira API URL variants.
+   */
+  private isCurrentUser(worklog: Worklog, user: User): boolean {
+    if (worklog.author?.accountId && user.accountId) {
+      return worklog.author.accountId === user.accountId;
+    }
+    return Boolean(worklog.author?.self && user.self) &&
+      decodeURIComponent(worklog.author.self) === decodeURIComponent(user.self);
   }
 
   /**
@@ -102,8 +114,8 @@ export class WorklogFacade {
     const endExclusive = Calendar.getStartOfNextDay(dateRange.end);
     return this.streamAllIssuesForWorklogDateRange$(dateRange, user).pipe(
       mergeAll(),
-      mergeMap<Issue, Observable<Worklog[]>>(issue => this.streamAllWorklogsForIssue$(issue)),
-      map<Worklog[], Worklog[]>(worklogs => worklogs.filter(worklog => decodeURIComponent(worklog.author.self) === decodeURIComponent(user.self)
+      mergeMap<Issue, Observable<Worklog[]>>(issue => this.streamAllWorklogsForIssue$(issue), 6),
+      map<Worklog[], Worklog[]>(worklogs => worklogs.filter(worklog => this.isCurrentUser(worklog, user)
         && new Date(worklog.started).valueOf() >= dateRange.start.valueOf()
         && new Date(worklog.started).valueOf() < endExclusive.valueOf()
       )),
@@ -123,6 +135,9 @@ export class WorklogFacade {
    * Refreshes work logs by emitting the updated list on every stage of the refreshing process and emits 'fetching'.
    */
   fetchWorklogsVerbose(): void {
+    if (!this.currentUser || !this.visibleDateRange) {
+      return;
+    }
     if (this.fetchWorklogsSubscription) {
       this.fetchWorklogsSubscription.unsubscribe();
     }
@@ -142,6 +157,9 @@ export class WorklogFacade {
    * Refreshes work logs by emitting the updated list only once and doesn't emit 'fetching' afterwards.
    */
   fetchWorklogsQuiet(): void {
+    if (!this.currentUser || !this.visibleDateRange) {
+      return;
+    }
     if (this.fetchWorklogsSubscription) {
       this.fetchWorklogsSubscription.unsubscribe();
     }
@@ -175,7 +193,7 @@ export class WorklogFacade {
    * Upon subscription updates work log entry, emits response from the server after it acknowledged the update
    */
   updateWorklog$(worklog: Worklog, started: Date, timeSpentSeconds: number, comment: string): Observable<Worklog> {
-    return this.worklogApi.updateWorklog$(worklog.issueId, worklog.id, started, timeSpentSeconds, comment).pipe(
+    return this.worklogApi.updateWorklog$(worklog.issueId, worklog.id, started, timeSpentSeconds, comment, worklog.comment).pipe(
       tap<Worklog>(updated => this.worklogState.addOrUpdateWorklog({...worklog, ...updated}))
     );
   }
@@ -186,7 +204,7 @@ export class WorklogFacade {
       this.refreshIntervalHandle = null;
     }
 
-    if (this.refreshIntervalTimeoutMinutes > 0) {
+    if (this.currentUser && this.refreshIntervalTimeoutMinutes > 0) {
       this.refreshIntervalHandle =
         setInterval(() => this.fetchWorklogsQuiet(), this.refreshIntervalTimeoutMinutes * 60000);
     }

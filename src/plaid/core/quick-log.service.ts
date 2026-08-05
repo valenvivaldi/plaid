@@ -27,6 +27,9 @@ export class QuickLogService {
     private userPreferencesService: UserPreferencesService
   ) {
     this.checkTodayStatus();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', () => this.checkTodayStatus());
+    }
   }
 
   getConfig$(): Observable<QuickLogConfig> {

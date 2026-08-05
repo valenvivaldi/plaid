@@ -39,7 +39,6 @@ import {UserPreferencesService} from '../../../core/user-preferences.service';
 export class WorklogEditorComponent implements OnInit {
   static readonly GRID_OFFSET_TOP = 62; // top bar height + grid header height
   static readonly GRID_OFFSET_LEFT = 30; // hour labels width
-  static readonly STRETCH_HANDLE_OFFSET_TOP = 4; // offset between top of a stretching handle and edge of the panel
 
   _pixelsPerMinute: number;
   _dateRange: DateRange;
@@ -59,6 +58,8 @@ export class WorklogEditorComponent implements OnInit {
   stretching = false;
   mouseEventXOffset: number;
   mouseEventYOffset: number;
+  stretchPointerStartY: number;
+  stretchBoundaryStartMinutes: number;
   issueString: string;
   dateString: string;
   commentString: string;
@@ -429,7 +430,8 @@ export class WorklogEditorComponent implements OnInit {
   stretchTopStart(event: MouseEvent): void {
     if (!this.saving && event.button === 0) {
       this.stretching = true;
-      this.mouseEventYOffset = event.offsetY - WorklogEditorComponent.STRETCH_HANDLE_OFFSET_TOP;
+      this.stretchPointerStartY = event.clientY;
+      this.stretchBoundaryStartMinutes = this.start.getHours() * 60 + this.start.getMinutes();
       addEventListener('mousemove', this.handleStretchTopEvent);
       addEventListener('mouseup', () => this.stretchEnd(this.handleStretchTopEvent), {once: true});
     }
@@ -441,7 +443,8 @@ export class WorklogEditorComponent implements OnInit {
   stretchBottomStart(event: MouseEvent): void {
     if (!this.saving && event.button === 0) {
       this.stretching = true;
-      this.mouseEventYOffset = event.offsetY - WorklogEditorComponent.STRETCH_HANDLE_OFFSET_TOP;
+      this.stretchPointerStartY = event.clientY;
+      this.stretchBoundaryStartMinutes = this.start.getHours() * 60 + this.start.getMinutes() + this.durationMinutes;
       addEventListener('mousemove', this.handleStretchBottomEvent);
       addEventListener('mouseup', () => this.stretchEnd(this.handleStretchBottomEvent), {once: true});
     }
@@ -460,7 +463,7 @@ export class WorklogEditorComponent implements OnInit {
     const snapTo: number = this.getSnapTo(event);
     const oldStartTimeMinutes: number = this.start.getHours() * 60 + this.start.getMinutes();
     const endTimeMinutes: number = oldStartTimeMinutes + this.durationMinutes;
-    let newStartTimeMinutes: number = this.getPointerTopOffsetMinutes(event, snapTo);
+    let newStartTimeMinutes: number = this.getStretchedBoundaryMinutes(event, snapTo);
     if (oldStartTimeMinutes !== newStartTimeMinutes) {
       if (newStartTimeMinutes < 0) { // Prevent stretching above the upper bound of the grid
         newStartTimeMinutes = 0;
@@ -483,7 +486,7 @@ export class WorklogEditorComponent implements OnInit {
     const snapTo: number = this.getSnapTo(event);
     const startTimeMinutes: number = this.start.getHours() * 60 + this.start.getMinutes();
     const oldEndTimeMinutes: number = startTimeMinutes + this.durationMinutes;
-    let newEndTimeMinutes: number = this.getPointerTopOffsetMinutes(event, snapTo);
+    let newEndTimeMinutes: number = this.getStretchedBoundaryMinutes(event, snapTo);
     if (oldEndTimeMinutes !== newEndTimeMinutes) {
       if (newEndTimeMinutes <= startTimeMinutes) { // Prevent stretching above the upper bound of the work log entry
         newEndTimeMinutes = Math.ceil((startTimeMinutes + 1) / snapTo) * snapTo;
@@ -514,6 +517,14 @@ export class WorklogEditorComponent implements OnInit {
     } else {
       return 5;
     }
+  }
+
+  /**
+   * Returns the resized boundary relative to the exact pointer position where stretching started.
+   */
+  getStretchedBoundaryMinutes(event: MouseEvent, snapTo: number): number {
+    const deltaMinutes = (event.clientY - this.stretchPointerStartY) / this.pixelsPerMinute;
+    return this.stretchBoundaryStartMinutes + Math.round(deltaMinutes / snapTo) * snapTo;
   }
 
   /**

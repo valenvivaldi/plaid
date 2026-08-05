@@ -31,6 +31,32 @@ describe('WorklogApi', () => {
       ]
     });
 
-    expect(text).toBe('First second');
+    expect(text).toBe("First\n second");
+  });
+
+  it("preserves the original ADF when only time fields change", async () => {
+    const http = {put: vi.fn(() => of({id: "worklog-1"}))};
+    const api = new WorklogApi(http as any);
+    const original: any = {
+      type: "doc",
+      version: 1,
+      content: [{type: "paragraph", content: [{type: "text", text: "Keep", marks: [{type: "strong"}]}]}]
+    };
+
+    await firstValueFrom(api.updateWorklog$("ISSUE-1", "worklog-1", new Date(2026, 0, 1), 60, "Keep", original));
+
+    expect(http.put.mock.calls[0][1].comment).toBe(original);
+  });
+
+  it("converts edited multiline text into separate ADF paragraphs", async () => {
+    const http = {put: vi.fn(() => of({id: "worklog-1"}))};
+    const api = new WorklogApi(http as any);
+
+    await firstValueFrom(api.updateWorklog$("ISSUE-1", "worklog-1", new Date(2026, 0, 1), 60, "First\nSecond"));
+
+    expect(http.put.mock.calls[0][1].comment.content).toEqual([
+      {type: "paragraph", content: [{type: "text", text: "First"}]},
+      {type: "paragraph", content: [{type: "text", text: "Second"}]}
+    ]);
   });
 });

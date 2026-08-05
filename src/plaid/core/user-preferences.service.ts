@@ -46,7 +46,7 @@ export class UserPreferencesService {
     new BehaviorSubject<Theme>((localStorage.getItem(this.THEME) || 'system') as Theme);
   private showToday: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(localStorage.getItem(this.SHOW_TODAY) === '1');
   private favoriteKeys: BehaviorSubject<FavoriteKeys> =
-    new BehaviorSubject<FavoriteKeys>((JSON.parse(localStorage.getItem(this.FAVORITE_KEYS) || '{}')) as FavoriteKeys);
+    new BehaviorSubject<FavoriteKeys>(this.readFavoriteKeys());
   
   // Quick Log configuration
   private quickLogNextDayMessage: BehaviorSubject<string> = 
@@ -72,6 +72,16 @@ export class UserPreferencesService {
       // Use saved value even if empty string, only use default if null (not saved yet)
       return saved !== null ? saved : defaultValue;
     })());
+
+  private readFavoriteKeys(): FavoriteKeys {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(this.FAVORITE_KEYS) || "{}");
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as FavoriteKeys : {};
+    } catch {
+      localStorage.removeItem(this.FAVORITE_KEYS);
+      return {};
+    }
+  }
 
   setWorkingHoursStartMinutes(value: number): void {
     this.workingHoursStartMinutes.next(value);

@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable, of} from 'rxjs';
+import {Observable, of, throwError} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
 import {Issue} from '../../model/issue';
 import {SearchResults} from '../../model/search-results';
@@ -20,7 +20,7 @@ export class IssueApi {
     return this.http.get<Issue>(
       this.getIssueUrl.replace('{issueIdOrKey}', issueIdOrKey) +
       '?fields=components,issuetype,parent,priority,summary,status,timeoriginalestimate'
-    ).pipe(catchError(() => of(null)));
+    ).pipe(catchError(error => error?.status === 404 ? of(null) : throwError(() => error)));
   }
 
   search$(jql: string, limit: number = 15): Observable<SearchResults> {

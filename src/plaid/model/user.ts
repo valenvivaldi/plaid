@@ -1,4 +1,5 @@
 export interface User {
+  accountId?: string;
   self?: string;
   key?: string;
   emailAddress?: string;

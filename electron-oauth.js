@@ -9,6 +9,13 @@ const SCOPES = 'read:jira-work write:jira-work read:jira-user offline_access';
 
 function createOauthService({app, net, safeStorage, shell, persistAuthInfo}) {
   let configuration;
+  let refreshPromise = null;
+
+  function sessionExpired(message) {
+    const error = new Error(message);
+    error.code = "OAUTH_SESSION_EXPIRED";
+    return error;
+  }
   const configPath = () => path.join(app.getPath('userData'), 'atlassian-oauth-config.bin');
 
   function loadConfiguration() {
@@ -48,7 +55,10 @@ function createOauthService({app, net, safeStorage, shell, persistAuthInfo}) {
     if (!response.ok) {
       const detail = typeof body === 'object' && body
         ? body.error_description || body.message || body.error : body;
-      throw new Error(`${action} failed (${response.status})${detail ? `: ${detail}` : ''}`);
+      const error = new Error(action + " failed (" + response.status + ")" + (detail ? ": " + detail : ""));
+      error.status = response.status;
+      error.oauthCode = typeof body === "object" && body ? body.error : null;
+      throw error;
     }
     return body;
   }
@@ -61,7 +71,8 @@ function createOauthService({app, net, safeStorage, shell, persistAuthInfo}) {
         client_id: config.clientId,
         client_secret: config.clientSecret,
         ...values
-      })
+      }),
+      signal: AbortSignal.timeout(30000)
     });
     return jsonResponse(response, 'Atlassian token exchange');
   }
@@ -156,7 +167,8 @@ function createOauthService({app, net, safeStorage, shell, persistAuthInfo}) {
     });
 
     const response = await net.fetch('https://api.atlassian.com/oauth/token/accessible-resources', {
-      headers: {Accept: 'application/json', Authorization: `Bearer ${tokens.access_token}`}
+      headers: {Accept: 'application/json', Authorization: `Bearer ${tokens.access_token}`},
+      signal: AbortSignal.timeout(30000)
     });
     const resources = await jsonResponse(response, 'Loading Jira sites');
     const site = selectResource(Array.isArray(resources) ? resources : [], options?.jiraUrl);
@@ -175,21 +187,36 @@ function createOauthService({app, net, safeStorage, shell, persistAuthInfo}) {
 
   async function accessToken(saved) {
     if (saved.expiresAt > Date.now() + 60000) return saved.accessToken;
-    if (!saved.refreshToken) throw new Error('The Atlassian session expired. Log in again.');
+    if (!saved.refreshToken) throw sessionExpired("The Atlassian session expired. Log in again.");
     const config = loadConfiguration();
-    if (!config) throw new Error('The OAuth configuration is missing. Log in again.');
-    const tokens = await requestToken(config, {
-      grant_type: 'refresh_token',
-      refresh_token: saved.refreshToken
-    });
-    const refreshed = {
-      ...saved,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token || saved.refreshToken,
-      expiresAt: Date.now() + Number(tokens.expires_in || 3600) * 1000
-    };
-    persistAuthInfo(refreshed);
-    return refreshed.accessToken;
+    if (!config) throw sessionExpired("The OAuth configuration is missing. Log in again.");
+
+    if (!refreshPromise) {
+      refreshPromise = (async () => {
+        try {
+          const tokens = await requestToken(config, {
+            grant_type: "refresh_token",
+            refresh_token: saved.refreshToken
+          });
+          const refreshed = {
+            ...saved,
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token || saved.refreshToken,
+            expiresAt: Date.now() + Number(tokens.expires_in || 3600) * 1000
+          };
+          persistAuthInfo(refreshed);
+          return refreshed.accessToken;
+        } catch (error) {
+          if ([400, 401].includes(error.status) || error.oauthCode === "invalid_grant") {
+            throw sessionExpired("The Atlassian session expired. Log in again.");
+          }
+          throw error;
+        } finally {
+          refreshPromise = null;
+        }
+      })();
+    }
+    return refreshPromise;
   }
 
   return {accessToken, configurationProfile, login};

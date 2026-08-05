@@ -2,6 +2,7 @@ import '@angular/compiler';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {BehaviorSubject, firstValueFrom, of} from 'rxjs';
 import {QuickLogService} from './quick-log.service';
+import {UserPreferencesService} from './user-preferences.service';
 import {User} from '../model/user';
 
 describe('QuickLogService', () => {
@@ -64,5 +65,13 @@ describe('QuickLogService', () => {
     await expect(firstValueFrom(service.createQuickLog('Daily note', 'problems')))
       .rejects.toThrow('Configure a valid Jira issue key');
     expect(addWorklog$).not.toHaveBeenCalled();
+  });
+  it("recovers from corrupted favorite preferences", async () => {
+    storage.set("FAVORITE_KEYS", "not-json");
+
+    const preferences = new UserPreferencesService();
+
+    await expect(firstValueFrom(preferences.getFavoriteKeys$())).resolves.toEqual({});
+    expect(storage.has("FAVORITE_KEYS")).toBe(false);
   });
 });

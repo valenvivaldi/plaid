@@ -19,7 +19,7 @@ export class AuthFacade {
               private electronService: ElectronService) {
     // Handle connection issues
     this.authState.getError$().pipe(skip(1)).subscribe(error => {
-      if (!this.authState.getAuthenticatedUser() || error && [401, 403].includes(error.status)) { // Authentication error
+      if (!this.authState.getAuthenticatedUser() || error?.status === 401) { // Authentication error
         this.authState.setAuthenticatedUser(null);
         this.appStateService.setConnectionIssueModalVisible(ConnectionIssueModalVisible.LOGIN);
       } else if (error && error.status === 0) { // Network connection issue

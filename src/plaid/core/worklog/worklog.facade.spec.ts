@@ -66,4 +66,24 @@ describe('WorklogFacade Jira pagination', () => {
     expect(emissions).toEqual([[]]);
     expect(worklogApi.getWorklogsForIssue$).not.toHaveBeenCalled();
   });
+  it("stops worklog pagination when Jira returns an empty page", async () => {
+    const getWorklogs = vi.fn(() => of({startAt: 0, total: 10, worklogs: []}));
+    const {facade} = createFacade({getWorklogsForIssue$: getWorklogs});
+
+    const pages = await firstValueFrom(
+      (facade as any).streamAllWorklogsForIssue$({id: "1"}).pipe(toArray())
+    );
+
+    expect(pages).toEqual([[]]);
+    expect(getWorklogs).toHaveBeenCalledOnce();
+  });
+
+  it("does not refresh worklogs without an authenticated user", () => {
+    const getIssues = vi.fn();
+    const {facade} = createFacade({getIssuesForWorklogDateRange$: getIssues});
+
+    facade.fetchWorklogsQuiet();
+
+    expect(getIssues).not.toHaveBeenCalled();
+  });
 });

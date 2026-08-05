@@ -62,7 +62,7 @@ const oauthService = createOauthService({app, net, safeStorage, shell, persistAu
 
 function authProfile() {
   const saved = loadAuthInfo();
-  return saved ? {jiraUrl: saved.jiraUrl, username: saved.username, password: ''} : null;
+  return saved ? {jiraUrl: saved.jiraUrl, username: saved.username, password: "", method: saved.method} : null;
 }
 
 function validateExternalUrl(rawUrl) {
@@ -141,7 +141,19 @@ function registerElectronBridge() {
     const headers = {Accept: 'application/json'};
     let requestUrl = target.href;
     if (saved.method === 'oauth') {
-      headers.Authorization = `Bearer ${await oauthService.accessToken(saved)}`;
+      try {
+        headers.Authorization = "Bearer " + await oauthService.accessToken(saved);
+      } catch (error) {
+        if (error.code !== "OAUTH_SESSION_EXPIRED") {
+          throw error;
+        }
+        return {
+          status: 401,
+          statusText: "Unauthorized",
+          headers: {},
+          body: {message: error.message, oauthSessionExpired: true}
+        };
+      }
       requestUrl = `https://api.atlassian.com/ex/jira/${encodeURIComponent(saved.cloudId)}${target.pathname}${target.search}`;
     } else {
       headers.Authorization = 'Basic ' + Buffer.from(saved.username + ':' + saved.password).toString('base64');
@@ -156,7 +168,8 @@ function registerElectronBridge() {
       method: request.method,
       headers,
       body,
-      redirect: 'manual'
+      redirect: 'manual',
+      signal: AbortSignal.timeout(30000)
     });
     const responseText = await response.text();
     let responseBody = responseText;

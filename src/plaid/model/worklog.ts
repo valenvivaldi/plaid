@@ -10,12 +10,10 @@ export interface AdfDocument {
 
 export interface AdfContent {
   type: string;
-  content?: AdfText[];
-}
-
-export interface AdfText {
-  type: 'text';
-  text: string;
+  text?: string;
+  content?: AdfContent[];
+  attrs?: Record<string, unknown>;
+  marks?: Array<{type: string; attrs?: Record<string, unknown>}>;
 }
 
 export interface Worklog {

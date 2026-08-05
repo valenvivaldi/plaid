@@ -22,28 +22,13 @@ export class WorklogApi {
    * Converts a plain text comment to ADF format for v3 API
    */
   private convertTextToAdf(text: string): AdfDocument {
-    if (!text) {
-      return {
-        type: 'doc',
-        version: 1,
-        content: []
-      };
-    }
-    
     return {
-      type: 'doc',
+      type: "doc",
       version: 1,
-      content: [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: text
-            }
-          ]
-        }
-      ]
+      content: text ? text.split(/\r?\n/).map(line => ({
+        type: "paragraph",
+        content: line ? [{type: "text", text: line}] : []
+      })) : []
     };
   }
 
@@ -51,25 +36,26 @@ export class WorklogApi {
    * Extracts plain text from ADF format
    */
   public extractTextFromAdf(adf: AdfDocument | string): string {
-    if (typeof adf === 'string') {
+    if (typeof adf === "string") {
       return adf;
     }
-    
-    if (!adf || !adf.content) {
-      return '';
+    if (!adf?.content) {
+      return "";
     }
-    
-    let result = '';
-    for (const content of adf.content) {
-      if (content.content) {
-        for (const textContent of content.content) {
-          if (textContent.type === 'text') {
-            result += textContent.text;
-          }
-        }
-      }
-    }
-    return result;
+
+    const blockTypes = new Set(["paragraph", "heading", "listItem", "blockquote", "codeBlock"]);
+    const extractNode = (node: any): string => {
+      if (node.type === "text") return node.text || "";
+      if (node.type === "hardBreak") return "\n";
+      if (node.type === "mention") return String(node.attrs?.text || node.attrs?.displayName || "");
+      if (node.type === "emoji") return String(node.attrs?.text || node.attrs?.shortName || "");
+      if (node.type === "inlineCard") return String(node.attrs?.url || "");
+
+      const text = (node.content || []).map(extractNode).join("");
+      return blockTypes.has(node.type) && text && !text.endsWith("\n") ? text + "\n" : text;
+    };
+
+    return extractNode(adf).trimEnd();
   }
 
   /**
@@ -120,12 +106,14 @@ export class WorklogApi {
   /**
    * Updates work log entry and returns observable emitting updated entry
    */
-  updateWorklog$(issueId: string, worklogId: string, started: Date, timeSpentSeconds: number, comment: string): Observable<Worklog> {
+  updateWorklog$(issueId: string, worklogId: string, started: Date, timeSpentSeconds: number, comment: string, originalComment?: string | AdfDocument): Observable<Worklog> {
     const url: string = this.updateWorklogUrl.replace('{issueIdOrKey}', issueId).replace('{id}', worklogId);
     const body = {
       started: started.toISOString().replace(/Z$/, '+0000'),
       timeSpentSeconds,
-      comment: this.convertTextToAdf(comment)
+      comment: originalComment && typeof originalComment !== "string" && this.extractTextFromAdf(originalComment) === comment
+        ? originalComment
+        : this.convertTextToAdf(comment)
     };
     return this.http.put<Worklog>(url, body);
   }
