@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  version: '2.5.0' // Updated manually to match package.json
+  version: '3.2.14' // Updated manually to match package.json
 };
 
 /*

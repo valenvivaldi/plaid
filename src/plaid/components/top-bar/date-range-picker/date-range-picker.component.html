@@ -20,23 +20,27 @@
     </a>
   </div>
   <div class="weekdays">
-    <div class="weekday" *ngFor="let weekday of weekdays">
-      {{ weekday }}
-    </div>
+    @for (weekday of weekdays; track weekday) {
+      <div class="weekday">
+        {{ weekday }}
+      </div>
+    }
   </div>
-  <div
-    class="week"
-    *ngFor="let week of days"
-    [class.selected]="selectedDateRange.start.valueOf() === week[this.visibleDaysStart].valueOf() && selectedDateRange.end.valueOf() === week[this.visibleDaysEnd].valueOf()"
-    (click)="selectDateRange({ start: week[this.visibleDaysStart], end: week[this.visibleDaysEnd] })"
-  >
+  @for (week of days; track week) {
     <div
-      class="day"
-      *ngFor="let day of week"
-      [class.other-month]="day.getMonth() !== month.getMonth()"
-      [class.today]="day.getTime() === today.getTime()"
-    >
-      {{ day.getDate() }}
+      class="week"
+      [class.selected]="selectedDateRange.start.valueOf() === week[this.visibleDaysStart].valueOf() && selectedDateRange.end.valueOf() === week[this.visibleDaysEnd].valueOf()"
+      (click)="selectDateRange({ start: week[this.visibleDaysStart], end: week[this.visibleDaysEnd] })"
+      >
+      @for (day of week; track day) {
+        <div
+          class="day"
+          [class.other-month]="day.getMonth() !== month.getMonth()"
+          [class.today]="day.getTime() === today.getTime()"
+          >
+          {{ day.getDate() }}
+        </div>
+      }
     </div>
-  </div>
+  }
 </div>

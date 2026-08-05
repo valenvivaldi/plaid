@@ -1,20 +1,22 @@
 <a
-  class="button"
+  class="button toolbar-icon-button"
   [class.both-color-schemes]="allowBothColorSchemes"
   [class.active]="zoomOutButtonActive"
   [class.disabled]="!isAbleToZoomOut"
   (click)="zoomOut()"
   title="Zoom out (Ctrl -)"
+  aria-label="Zoom out"
 >
-  <svg class="icon"><use href="assets/icons.svg#zoom-out"></use></svg>
+  <span class="toolbar-emoji-icon" aria-hidden="true">➖</span>
 </a>
 <a
-  class="button"
+  class="button toolbar-icon-button"
   [class.both-color-schemes]="allowBothColorSchemes"
   [class.active]="zoomInButtonActive"
   [class.disabled]="!isAbleToZoomIn"
   (click)="zoomIn()"
   title="Zoom in (Ctrl +)"
+  aria-label="Zoom in"
 >
-  <svg class="icon"><use href="assets/icons.svg#zoom-in"></use></svg>
+  <span class="toolbar-emoji-icon" aria-hidden="true">➕</span>
 </a>

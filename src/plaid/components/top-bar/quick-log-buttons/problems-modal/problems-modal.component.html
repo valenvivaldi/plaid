@@ -19,6 +19,9 @@
       <div class="hint-text">
         💡 If you don't write anything, it will log: "{{ defaultMessage }}"
       </div>
+      @if (errorMessage) {
+        <div class="error-message" role="alert">{{ errorMessage }}</div>
+      }
       
       <div class="buttons-area">
         <button 

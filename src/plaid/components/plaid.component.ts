@@ -9,14 +9,16 @@ import {AppStateService} from '../core/app-state.service';
 import {UserPreferencesService} from '../core/user-preferences.service';
 import {Theme} from '../model/theme';
 import {SystemPreferencesService} from '../core/system-preferences.service';
+import {ElectronService} from '../core/electron/electron.service';
 
 /**
  * Application container.
  */
 @Component({
-  selector: 'plaid-root',
-  templateUrl: './plaid.component.html',
-  styleUrls: ['./plaid.component.scss']
+    selector: 'plaid-root',
+    templateUrl: './plaid.component.html',
+    styleUrls: ['./plaid.component.scss'],
+    standalone: false
 })
 export class PlaidComponent implements OnInit {
   pixelsPerMinute: number;
@@ -24,6 +26,7 @@ export class PlaidComponent implements OnInit {
   worklogs: Worklog[];
   loading: boolean;
   visibleDateRange: DateRange;
+  isElectron: boolean;
   currentUser: User;
   connectionIssueModalVisible = false;
   workingHoursStartMinutes: number;
@@ -54,8 +57,11 @@ export class PlaidComponent implements OnInit {
     private authFacade: AuthFacade,
     private worklogFacade: WorklogFacade,
     private appStateService: AppStateService,
-    private userPreferencesService: UserPreferencesService
-  ) {}
+    private userPreferencesService: UserPreferencesService,
+    electronService: ElectronService
+  ) {
+    this.isElectron = electronService.isElectron;
+  }
 
   ngOnInit(): void {
     // Singleton component, no need to unsubscribe

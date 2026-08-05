@@ -21,10 +21,11 @@ import {WorklogApi} from '../../../core/worklog/worklog.api';
  * entry. Makes use of its own service to manage visual aspects of all class instances at once.
  */
 @Component({
-  selector: 'plaid-worklog-panel',
-  templateUrl: './worklog-panel.component.html',
-  styleUrls: ['./worklog-panel.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-worklog-panel',
+    templateUrl: './worklog-panel.component.html',
+    styleUrls: ['./worklog-panel.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WorklogPanelComponent implements OnInit, OnDestroy {
   jiraURL: string;

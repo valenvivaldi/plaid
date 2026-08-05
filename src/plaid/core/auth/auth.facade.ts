@@ -8,13 +8,15 @@ import {ConnectionIssueModalVisible} from '../../components/connection-issue-res
 import {AuthApi} from './auth.api';
 import {skip} from 'rxjs/operators';
 import {AppStateService} from '../app-state.service';
+import {ElectronService} from '../electron/electron.service';
 
 /**
  * Business logic facade for authentication.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthFacade {
-  constructor(private authState: AuthState, private authApi: AuthApi, private appStateService: AppStateService) {
+  constructor(private authState: AuthState, private authApi: AuthApi, private appStateService: AppStateService,
+              private electronService: ElectronService) {
     // Handle connection issues
     this.authState.getError$().pipe(skip(1)).subscribe(error => {
       if (!this.authState.getAuthenticatedUser() || error && [401, 403].includes(error.status)) { // Authentication error
@@ -54,6 +56,17 @@ export class AuthFacade {
   login(authInfo: AuthInfo): void {
     this.authState.setAuthenticatedUser(null);
     this.authState.setAuthInfo(authInfo);
+    this.fetchAuthenticatedUser();
+  }
+
+  getOauthConfiguration(): {configured: boolean; clientId: string; redirectUri: string} {
+    return this.electronService.getOauthConfiguration();
+  }
+
+  async loginWithAtlassian(options: {jiraUrl: string; clientId?: string; clientSecret?: string}): Promise<void> {
+    this.authState.setAuthenticatedUser(null);
+    const profile = await this.electronService.loginWithAtlassian(options);
+    this.authState.useElectronAuthProfile(profile);
     this.fetchAuthenticatedUser();
   }
 

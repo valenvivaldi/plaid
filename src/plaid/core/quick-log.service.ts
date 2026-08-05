@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, Observable, throwError } from 'rxjs';
+import { map, switchMap, take, tap } from 'rxjs/operators';
 import { WorklogFacade } from './worklog/worklog.facade';
 import { AuthFacade } from './auth/auth.facade';
 import { UserPreferencesService } from './user-preferences.service';
@@ -30,39 +30,19 @@ export class QuickLogService {
   }
 
   getConfig$(): Observable<QuickLogConfig> {
-    return new Observable(observer => {
-      // Combinar todas las configuraciones desde UserPreferencesService
-      let config: Partial<QuickLogConfig> = {};
-      let completedSubscriptions = 0;
-      const totalSubscriptions = 4;
-
-      const checkComplete = () => {
-        completedSubscriptions++;
-        if (completedSubscriptions === totalSubscriptions) {
-          observer.next(config as QuickLogConfig);
-        }
-      };
-
-      this.userPreferencesService.getQuickLogNextDayMessage$().pipe(take(1)).subscribe(message => {
-        config.nextDayTasksDefaultMessage = message;
-        checkComplete();
-      });
-
-      this.userPreferencesService.getQuickLogProblemsMessage$().pipe(take(1)).subscribe(message => {
-        config.problemsDefaultMessage = message;
-        checkComplete();
-      });
-
-      this.userPreferencesService.getQuickLogNextDayEnabled$().pipe(take(1)).subscribe(enabled => {
-        config.nextDayTasksEnabled = enabled;
-        checkComplete();
-      });
-
-      this.userPreferencesService.getQuickLogProblemsEnabled$().pipe(take(1)).subscribe(enabled => {
-        config.problemsEnabled = enabled;
-        checkComplete();
-      });
-    });
+    return combineLatest([
+      this.userPreferencesService.getQuickLogNextDayMessage$(),
+      this.userPreferencesService.getQuickLogProblemsMessage$(),
+      this.userPreferencesService.getQuickLogNextDayEnabled$(),
+      this.userPreferencesService.getQuickLogProblemsEnabled$()
+    ]).pipe(
+      map(([nextDayTasksDefaultMessage, problemsDefaultMessage, nextDayTasksEnabled, problemsEnabled]) => ({
+        nextDayTasksDefaultMessage,
+        problemsDefaultMessage,
+        nextDayTasksEnabled,
+        problemsEnabled
+      }))
+    );
   }
 
   getNextDayTasksLoggedToday$(): Observable<boolean> {
@@ -110,83 +90,53 @@ export class QuickLogService {
   }
 
   createQuickLog(comment: string, type: 'next-day-tasks' | 'problems'): Observable<void> {
-    return new Observable(observer => {
-      this.authFacade.getAuthenticatedUser$().pipe(
-        take(1)
-      ).subscribe(currentUser => {
+    const taskCode$ = type === 'next-day-tasks'
+      ? this.userPreferencesService.getQuickLogNextDayTaskCode$()
+      : this.userPreferencesService.getQuickLogProblemsTaskCode$();
+
+    return combineLatest([
+      this.authFacade.getAuthenticatedUser$(),
+      taskCode$,
+      this.userPreferencesService.getQuickLogTimeMinutes$()
+    ]).pipe(
+      take(1),
+      switchMap(([currentUser, taskCode, quickLogTimeMinutes]) => {
         if (!currentUser) {
-          observer.error(new Error('User not authenticated'));
-          return;
+          return throwError(() => new Error('User not authenticated'));
         }
 
-        // Get task code configuration
-        const taskCodeObservable = type === 'next-day-tasks' 
-          ? this.userPreferencesService.getQuickLogNextDayTaskCode$()
-          : this.userPreferencesService.getQuickLogProblemsTaskCode$();
+        const issueKey = taskCode?.trim();
+        if (!issueKey || !/^[A-Za-z][A-Za-z0-9_]*-[1-9][0-9]*$/.test(issueKey)) {
+          return throwError(() => new Error('Configure a valid Jira issue key before using Quick Log'));
+        }
 
-        taskCodeObservable.pipe(take(1)).subscribe(taskCode => {
-          // Get configured time for quick log
-          this.userPreferencesService.getQuickLogTimeMinutes$().pipe(take(1)).subscribe(quickLogTimeMinutes => {
-            const now = new Date();
-            
-            // Set time to configured hour and minute (default is 9:00 AM)
-            const hours = Math.floor(quickLogTimeMinutes / 60);
-            const minutes = quickLogTimeMinutes % 60;
-            now.setHours(hours, minutes, 0, 0);
-            
-            let worklog: Partial<Worklog>;
-
-          if (taskCode && taskCode.trim()) {
-            // Create 1-minute worklog in the configured task
-            worklog = {
-              comment: comment,
-              started: now.toISOString(),
-              timeSpentSeconds: 60, // 1 minute
-              author: currentUser,
-              issueId: taskCode.trim(),
-              issue: {
-                key: taskCode.trim(),
-                fields: {
-                  summary: type === 'next-day-tasks' ? 'Next day tasks tracking' : 'Problems tracking'
-                }
-              } as any
-            };
-          } else {
-            // Fallback to generic quick log (original behavior)
-            worklog = {
-              comment: comment,
-              started: now.toISOString(),
-              timeSpentSeconds: 60, // 1 minute
-              author: currentUser,
-              issueId: 'QUICK-LOG', // Generic ID for quick logs
-              issue: {
-                key: type === 'next-day-tasks' ? 'QUICK-LOG-NEXT' : 'QUICK-LOG-PROBLEMS',
-                fields: {
-                  summary: type === 'next-day-tasks' ? 'Next day tasks' : 'Problems found'
-                }
-              } as any
-            };
+        const started = new Date();
+        started.setHours(Math.floor(quickLogTimeMinutes / 60), quickLogTimeMinutes % 60, 0, 0);
+        const worklog: Worklog = {
+          comment,
+          started: started.toISOString(),
+          timeSpentSeconds: 60,
+          author: currentUser,
+          issueId: issueKey,
+          issue: {
+            key: issueKey,
+            fields: {
+              summary: type === 'next-day-tasks' ? 'Next day tasks tracking' : 'Problems tracking'
+            }
           }
+        };
 
-          this.worklogFacade.addWorklog$(worklog as Worklog, now, 60, worklog.comment as string)
-            .subscribe({
-              next: () => {
-                if (type === 'next-day-tasks') {
-                  this.markNextDayTasksAsLogged();
-                } else {
-                  this.markProblemsAsLogged();
-                }
-                observer.next();
-                observer.complete();
-              },
-              error: error => {
-                console.error('Error creating quick log:', error);
-                observer.error(error);
-              }
-            });
-          }); // End of quickLogTimeMinutes subscription
-        }); // End of taskCode subscription
-      });
-    });
+        return this.worklogFacade.addWorklog$(worklog, started, 60, comment).pipe(
+          tap(() => {
+            if (type === 'next-day-tasks') {
+              this.markNextDayTasksAsLogged();
+            } else {
+              this.markProblemsAsLogged();
+            }
+          }),
+          map(() => undefined)
+        );
+      })
+    );
   }
 }

@@ -14,10 +14,11 @@ import {Theme} from '../../../model/theme';
  * Dumb component, presents settings button and dropdown, and delegates settings changes to the parent component.
  */
 @Component({
-  selector: 'plaid-settings',
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-settings',
+    templateUrl: './settings.component.html',
+    styleUrls: ['./settings.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SettingsComponent {
   private _dropdownOpen = false;

@@ -1,10 +1,11 @@
 <div class="time-marker" [style.top.px]="markerOffsetTop + 25">
-  <div
-    *ngIf="markerVisible"
-    class="day-marker"
-    [style.width.%]="100 / daysVisible"
-    [style.left.%]="100 / daysVisible * markerOffsetLeft"
-  ></div>
+  @if (markerVisible) {
+    <div
+      class="day-marker"
+      [style.width.%]="100 / daysVisible"
+      [style.left.%]="100 / daysVisible * markerOffsetLeft"
+    ></div>
+  }
 </div>
 <div class="time-label-wrapper">
   <div class="time-label-spacer" [style.height.px]="markerOffsetTop"></div>

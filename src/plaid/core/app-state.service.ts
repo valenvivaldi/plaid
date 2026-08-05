@@ -8,12 +8,12 @@ import {UserPreferencesService} from './user-preferences.service';
 export class AppStateService implements OnDestroy {
   private connectionIssueModalVisible: BehaviorSubject<ConnectionIssueModalVisible> =
     new BehaviorSubject<ConnectionIssueModalVisible>(ConnectionIssueModalVisible.NONE);
-  private visibleDateRange: BehaviorSubject<DateRange> =
-    new BehaviorSubject<DateRange>(this.getInitialVisibleDateRange());
+  private visibleDateRange: BehaviorSubject<DateRange>;
   private showTodaySubscription: Subscription;
   private currentShowToday: boolean = localStorage.getItem('SHOW_TODAY') === '1';
 
   constructor(private userPrefsService: UserPreferencesService) {
+    this.visibleDateRange = new BehaviorSubject<DateRange>(this.getInitialVisibleDateRange());
     // Listen to showToday changes and recalculate visible date range
     this.showTodaySubscription = this.userPrefsService.getShowToday$().subscribe(showToday => {
       this.currentShowToday = showToday;

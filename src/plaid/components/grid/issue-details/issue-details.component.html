@@ -1,34 +1,63 @@
-<ng-container *ngIf="issue">
-  <p
-    class="parent-name"
-    *ngIf="issue.fields.parent"
-  >
-    <svg class="icon-parent"><use href="assets/icons.svg#parent"></use></svg>
-    <b class="issue-key-clickable" (click)="openIssueInJira($event, issue.fields.parent.key)" [title]="'Click to open in Jira'">{{ issue.fields.parent.key }}</b>
-    {{ issue.fields.parent.fields.summary }}
-  </p>
+@if (issue) {
+  @if (issue.fields.parent) {
+    <p
+      class="parent-name"
+      >
+      <svg class="icon-parent"><use href="assets/icons.svg#parent"></use></svg>
+      <b class="issue-key-clickable" [plaidExtHref]="getIssueUrl(issue.fields.parent.key)" title="Click to open in Jira">{{ issue.fields.parent.key }}</b>
+      {{ issue.fields.parent.fields.summary }}
+    </p>
+  }
   <p class="name">
-    <b class="issue-key-clickable" (click)="openIssueInJira($event, issue.key)" [title]="'Click to open in Jira'">{{ issue.key }}</b>
+    <b class="issue-key-clickable" [plaidExtHref]="getIssueUrl(issue.key)" title="Click to open in Jira">{{ issue.key }}</b>
     {{ issue.fields.summary }}
   </p>
   <p class="fields">
-    <img
-      *ngIf="issue.fields.issuetype"
-      [src]="issue.fields.issuetype.iconUrl"
-      [title]="issue.fields.issuetype.name"
-      class="field-icon"
-    >
-    <img
-      *ngIf="issue.fields.priority"
-      [src]="issue.fields.priority.iconUrl"
-      [title]="issue.fields.priority.name"
-      class="field-icon"
-    >
-    <span class="status" *ngIf="issue.fields.status" [ngClass]="issue.fields.status.statusCategory?.colorName">
-      {{ issue.fields.status.name }}
-    </span>
+    @if (issue.fields.issuetype) {
+      <img
+        [src]="issue.fields.issuetype.iconUrl"
+        [title]="issue.fields.issuetype.name"
+        class="field-icon"
+        >
+    }
+    @if (issue.fields.priority) {
+      <img
+        [src]="issue.fields.priority.iconUrl"
+        [title]="issue.fields.priority.name"
+        class="field-icon"
+        >
+    }
+    @if (issue.fields.status) {
+      <span
+        class="status"
+        [ngClass]="issue.fields.status.statusCategory?.colorName"
+        [class.status-clickable]="editableStatus"
+        [class.loading]="loadingTransitions"
+        [title]="editableStatus ? 'Click to change status' : null"
+        (click)="editableStatus && openStatusMenu($event)"
+        >
+        {{ issue.fields.status.name }}
+      </span>
+    }
     {{ getComponents() }}
   </p>
-</ng-container>
+  @if (statusMenuOpen) {
+    <div class="status-menu-backdrop" (click)="closeStatusMenu()"></div>
+    <ul class="status-menu" [style.top.px]="menuTop" [style.left.px]="menuLeft">
+      @if (transitions.length === 0) {
+        <li class="status-menu-empty">No transitions available</li>
+      }
+      @for (transition of transitions; track transition) {
+        <li
+          [class.applying]="applyingTransitionId === transition.id"
+          (click)="applyTransition(transition)"
+          >
+          <span class="status-dot" [ngClass]="transition.to?.statusCategory?.colorName"></span>
+          {{ transition.name }}
+        </li>
+      }
+    </ul>
+  }
+}
 
 

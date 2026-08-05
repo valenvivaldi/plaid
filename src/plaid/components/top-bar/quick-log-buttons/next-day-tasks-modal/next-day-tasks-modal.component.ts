@@ -2,13 +2,15 @@ import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, 
 import { Issue } from '../../../../model/issue';
 
 @Component({
-  selector: 'plaid-next-day-tasks-modal',
-  templateUrl: './next-day-tasks-modal.component.html',
-  styleUrls: ['./next-day-tasks-modal.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-next-day-tasks-modal',
+    templateUrl: './next-day-tasks-modal.component.html',
+    styleUrls: ['./next-day-tasks-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NextDayTasksModalComponent implements OnInit {
   @Input() defaultMessage = '';
+  @Input() errorMessage = '';
   @Output() submitMessage = new EventEmitter<string>();
   @Output() cancelModal = new EventEmitter<void>();
 

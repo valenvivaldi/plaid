@@ -70,6 +70,13 @@ export class Calendar {
     return days;
   }
 
+  /**
+   * Returns the next local midnight without assuming every calendar day lasts exactly 24 hours.
+   */
+  static getStartOfNextDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  }
+
   static copyDateRange(dateRange: DateRange): DateRange {
     return {
       start: new Date(dateRange.start),

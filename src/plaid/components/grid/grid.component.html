@@ -1,9 +1,11 @@
 <div class="grid" [style.min-width.px]="30 + days.length * 180" [style.min-height.px]="gridHeight">
   <div class="grid-header">
     <div class="header-over-labels"></div>
-    <div class="header-over-content" *ngFor="let weekday of days">
-      {{ weekday | date:'EEE, LLL d' }}
-    </div>
+    @for (weekday of days; track weekday) {
+      <div class="header-over-content">
+        {{ weekday | date:'EEE, LLL d' }}
+      </div>
+    }
   </div>
   <div class="working-window-wrapper">
     <div
@@ -23,34 +25,39 @@
     [dateRange]="dateRange"
   ></plaid-current-time-marker>
   <div class="worklog-panels-area">
-    <div
-      class="worklog-panels-area-column"
-      *ngFor="let logs of worklogsSplitByDays; index as dayIndex"
-      [style.height.px]="pixelsPerMinute * 1440"
-    >
-      <plaid-worklog-panel
-        *ngFor="let worklog of logs; trackBy: worklogPanelTrackByFn"
-        [worklog]="worklog"
-        [pixelsPerMinute]="pixelsPerMinute"
-        [currentlyEdited]="worklog.id === editedWorklog?.id"
-        (edit)="editedWorklog = worklog"
-        (delete)="deleteWorklog(worklog)"
-      ></plaid-worklog-panel>
-      <plaid-worklog-panel
-        *ngFor="let addHint of addHintsSplitByDays[dayIndex]; trackBy: worklogPanelTrackByFn"
-        [worklog]="addHint"
-        [pixelsPerMinute]="pixelsPerMinute"
-        (edit)="editedWorklog = addHint"
-      ></plaid-worklog-panel>
-    </div>
+    @for (logs of worklogsSplitByDays; track logs; let dayIndex = $index) {
+      <div
+        class="worklog-panels-area-column"
+        [style.height.px]="pixelsPerMinute * 1440"
+        >
+        @for (worklog of logs; track worklogPanelTrackByFn($index, worklog)) {
+          <plaid-worklog-panel
+            [worklog]="worklog"
+            [pixelsPerMinute]="pixelsPerMinute"
+            [currentlyEdited]="worklog.id === editedWorklog?.id"
+            (edit)="editedWorklog = worklog"
+            (delete)="deleteWorklog(worklog)"
+          ></plaid-worklog-panel>
+        }
+        @for (addHint of addHintsSplitByDays[dayIndex]; track worklogPanelTrackByFn($index, addHint)) {
+          <plaid-worklog-panel
+            [worklog]="addHint"
+            [pixelsPerMinute]="pixelsPerMinute"
+            (edit)="editedWorklog = addHint"
+          ></plaid-worklog-panel>
+        }
+      </div>
+    }
   </div>
   <div class="grid-footer">
     <div class="footer-under-labels">
       &Sigma;
     </div>
-    <div class="footer-under-content" *ngFor="let timeSum of timeSums">
-      {{ timeSum }}
-    </div>
+    @for (timeSum of timeSums; track timeSum) {
+      <div class="footer-under-content">
+        {{ timeSum }}
+      </div>
+    }
   </div>
   <div class="loading-overlay" [class.visible]="loading">
     <span class="spinner"></span>

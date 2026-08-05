@@ -1,22 +1,27 @@
 import {Injectable} from '@angular/core';
-import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
-import {EMPTY, Observable, throwError} from 'rxjs';
-import {catchError, filter, mergeMap, skip, take} from 'rxjs/operators';
+import {HttpErrorResponse, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest, HttpResponse} from '@angular/common/http';
+import {EMPTY, from, Observable, throwError} from 'rxjs';
+import {catchError, filter, map, mergeMap, skip, take} from 'rxjs/operators';
 import {AuthState} from './auth.state';
 import {User} from '../../model/user';
+import {ElectronService} from '../electron/electron.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authState: AuthState) {}
+  constructor(private authState: AuthState, private electronService: ElectronService) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const authInfo = this.authState.getAuthInfo();
     if (authInfo) {
+      const url = request.url.substr(0, 7) !== 'http://' && request.url.substr(0, 8) !== 'https://'
+        ? authInfo.jiraUrl + request.url
+        : request.url;
+      if (this.electronService.isElectron) {
+        return this.handleElectronRequest(request, next, url);
+      }
       const newRequest: HttpRequest<any> = request.clone({
         setHeaders: {Authorization: this.authState.getAuthHeader()},
-        url: request.url.substr(0, 7) !== 'http://' && request.url.substr(0, 8) !== 'https://'
-          ? authInfo.jiraUrl + request.url
-          : request.url
+        url
       });
       return next.handle(newRequest).pipe(
         catchError((error: HttpErrorResponse) => this.handleError(request, next, error))
@@ -24,6 +29,40 @@ export class AuthInterceptor implements HttpInterceptor {
     } else {
       return this.handleError(request, next, null);
     }
+  }
+
+  private handleElectronRequest(
+    request: HttpRequest<any>,
+    next: HttpHandler,
+    url: string
+  ): Observable<HttpEvent<any>> {
+    return from(this.electronService.request({
+      url,
+      method: request.method,
+      body: request.body
+    })).pipe(
+      map(response => {
+        if (response.status >= 200 && response.status < 300) {
+          return new HttpResponse({
+            body: response.body,
+            headers: new HttpHeaders(response.headers),
+            status: response.status,
+            statusText: response.statusText,
+            url
+          });
+        }
+        throw new HttpErrorResponse({
+          error: response.body,
+          headers: new HttpHeaders(response.headers),
+          status: response.status,
+          statusText: response.statusText,
+          url
+        });
+      }),
+      catchError(error => this.handleError(request, next, error instanceof HttpErrorResponse
+        ? error
+        : new HttpErrorResponse({error, status: 0, url})))
+    );
   }
 
   private handleError(request: HttpRequest<any>, next: HttpHandler, error: HttpErrorResponse | null): Observable<HttpEvent<any>> {

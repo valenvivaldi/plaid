@@ -4,8 +4,9 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
  * Dumb component, presents two buttons, handles zoom change shortcuts and delegates change in pixelsPerMinute value.
  */
 @Component({
-  selector: 'plaid-zoom-controls',
-  templateUrl: './zoom-controls.component.html'
+    selector: 'plaid-zoom-controls',
+    templateUrl: './zoom-controls.component.html',
+    standalone: false
 })
 export class ZoomControlsComponent implements OnInit {
   static readonly MIN_PIXELS_PER_MINUTE_EXPONENT = 0;

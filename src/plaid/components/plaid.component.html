@@ -1,3 +1,8 @@
+@if (isElectron) {
+  <div class="electron-title-bar" aria-hidden="true">
+    <span>EtendoPlaid</span>
+  </div>
+}
 <div class="top-bar">
   <plaid-date-range-picker
     #dateRangePicker
@@ -7,24 +12,26 @@
     (selectedDateRangeChange)="setVisibleDateRange($event)"
     [shortcutsDisabled]="connectionIssueModalVisible"
   ></plaid-date-range-picker>
-  <plaid-refresh-button
-    (refresh)="refresh()"
-    [disabled]="!currentUser"
-    [shortcutsDisabled]="connectionIssueModalVisible"
-  ></plaid-refresh-button>
   <plaid-add-button
     [disabled]="!currentUser || !!grid.editedWorklog"
     [gridComponent]="grid"
   ></plaid-add-button>
-  <plaid-quick-log-buttons
-    *ngIf="currentUser"
-  ></plaid-quick-log-buttons>
+  @if (currentUser) {
+    <plaid-quick-log-buttons
+    ></plaid-quick-log-buttons>
+    <span class="toolbar-separator" aria-hidden="true"></span>
+  }
   <plaid-zoom-controls
     class="outside-settings"
     (pixelsPerMinuteChange)="pixelsPerMinute = $event"
     [(pixelsPerMinuteExponent)]="pixelsPerMinuteExponent"
     [shortcutsDisabled]="connectionIssueModalVisible"
   ></plaid-zoom-controls>
+  <plaid-refresh-button
+    (refresh)="refresh()"
+    [disabled]="!currentUser || loading"
+    [shortcutsDisabled]="connectionIssueModalVisible"
+  ></plaid-refresh-button>
   <plaid-settings
     #settings
     [workingHoursStartMinutes]="workingHoursStartMinutes"
@@ -59,7 +66,7 @@
     (quickLogTimeMinutesChange)="setQuickLogTimeMinutes($event)"
     [worklogDefaultTemplate]="worklogDefaultTemplate"
     (worklogDefaultTemplateChange)="setWorklogDefaultTemplate($event)"
-  >
+    >
     <plaid-zoom-controls
       class="inside-settings"
       [allowBothColorSchemes]="false"
@@ -68,6 +75,7 @@
       [shortcutsDisabled]="true"
     ></plaid-zoom-controls>
   </plaid-settings>
+  <span class="toolbar-separator" aria-hidden="true"></span>
   <plaid-auth-status
     #authStatus
     [user]="currentUser"

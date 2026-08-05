@@ -20,6 +20,7 @@ import {DatePickerCloudComponent} from './date-picker-cloud/date-picker-cloud.co
 import {Issue} from '../../../model/issue';
 import {IssuePickerCloudComponent} from './issue-picker-cloud/issue-picker-cloud.component';
 import {Subject} from 'rxjs';
+import {finalize} from 'rxjs/operators';
 import {IssueApi} from '../../../core/issue/issue.api';
 import {WorklogApi} from '../../../core/worklog/worklog.api';
 import {SystemPreferencesService} from '../../../core/system-preferences.service';
@@ -29,10 +30,11 @@ import {UserPreferencesService} from '../../../core/user-preferences.service';
  * Smart component, presenting edited worklog, handling all its interactions and updating worklog on the server
  */
 @Component({
-  selector: 'plaid-worklog-editor',
-  templateUrl: './worklog-editor.component.html',
-  styleUrls: ['./worklog-editor.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-worklog-editor',
+    templateUrl: './worklog-editor.component.html',
+    styleUrls: ['./worklog-editor.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WorklogEditorComponent implements OnInit {
   static readonly GRID_OFFSET_TOP = 62; // top bar height + grid header height
@@ -527,7 +529,7 @@ export class WorklogEditorComponent implements OnInit {
   /**
    * Closes the editor if user clicked outside the panel with left mouse button
    */
-  handleClickOutsideEditor(event: MouseEvent): void {
+  handleClickOutsideEditor(_event: MouseEvent): void {
   }
 
   /**
@@ -696,21 +698,23 @@ export class WorklogEditorComponent implements OnInit {
     const worklog = this.worklog!;
     if (this.adding) {
       this.worklogFacade.addWorklog$(worklog, this.start, this.durationMinutes * 60, this.commentString)
+        .pipe(finalize(() => {
+          this.saving = false;
+          this.cdr.markForCheck();
+        }))
         .subscribe({
           next: () => this.close(),
-          complete: () => {
-            this.saving = false;
-            this.cdr.detectChanges();
-          }
+          error: () => undefined
         });
     } else {
       this.worklogFacade.updateWorklog$(worklog, this.start, this.durationMinutes * 60, this.commentString)
+        .pipe(finalize(() => {
+          this.saving = false;
+          this.cdr.markForCheck();
+        }))
         .subscribe({
           next: () => this.close(),
-          complete: () => {
-            this.saving = false;
-            this.cdr.detectChanges();
-          }
+          error: () => undefined
         });
     }
   }

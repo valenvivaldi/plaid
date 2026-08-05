@@ -7,13 +7,13 @@ import {WorklogState} from './worklog.state';
 import {WorklogApi} from './worklog.api';
 import {AuthFacade} from '../auth/auth.facade';
 import {AppStateService} from '../app-state.service';
-import {expand, map, mergeAll, mergeMap, scan, takeLast, tap} from 'rxjs/operators';
+import {expand, finalize, map, mergeAll, mergeMap, scan, startWith, takeLast, tap} from 'rxjs/operators';
 import {Calendar} from '../../helpers/calendar';
 import {UserPreferencesService} from '../user-preferences.service';
 import Timeout = NodeJS.Timeout;
 import {Issue} from '../../model/issue';
 import {WorklogWithPagination} from '../../model/worklog-with-pagination';
-import {SearchResults} from '../../model/search-results';
+import {JqlSearchResults} from '../../model/jql-search-results';
 
 /**
  * Business logic facade for work logs.
@@ -72,11 +72,11 @@ export class WorklogFacade {
   private streamAllIssuesForWorklogDateRange$(dateRange: DateRange, user: User): Observable<Issue[]> {
     return this.worklogApi.getIssuesForWorklogDateRange$(dateRange, user).pipe(
       expand(
-        (results: SearchResults) => (results.startAt + results.issues.length) < results.total
-          ? this.worklogApi.getIssuesForWorklogDateRange$(dateRange, user, results.startAt + results.issues.length)
+        (results: JqlSearchResults) => !results.isLast && !!results.nextPageToken
+          ? this.worklogApi.getIssuesForWorklogDateRange$(dateRange, user, results.nextPageToken)
           : EMPTY
       ),
-      map<SearchResults, Issue[]>((results: SearchResults) => results.issues)
+      map<JqlSearchResults, Issue[]>((results: JqlSearchResults) => results.issues || [])
     );
   }
 
@@ -99,14 +99,16 @@ export class WorklogFacade {
    * complete.
    */
   private getWorklogsForDateRangeVerbose$(dateRange: DateRange, user: User): Observable<Worklog[]> {
+    const endExclusive = Calendar.getStartOfNextDay(dateRange.end);
     return this.streamAllIssuesForWorklogDateRange$(dateRange, user).pipe(
       mergeAll(),
       mergeMap<Issue, Observable<Worklog[]>>(issue => this.streamAllWorklogsForIssue$(issue)),
       map<Worklog[], Worklog[]>(worklogs => worklogs.filter(worklog => decodeURIComponent(worklog.author.self) === decodeURIComponent(user.self)
         && new Date(worklog.started).valueOf() >= dateRange.start.valueOf()
-        && new Date(worklog.started).valueOf() < dateRange.end.valueOf() + 86400000
+        && new Date(worklog.started).valueOf() < endExclusive.valueOf()
       )),
-      scan<Worklog[], Worklog[]>((acc: Worklog[], val: Worklog[]) => acc.concat(val), [])
+      scan<Worklog[], Worklog[]>((acc: Worklog[], val: Worklog[]) => acc.concat(val), []),
+      startWith([])
     );
   }
 
@@ -121,16 +123,16 @@ export class WorklogFacade {
    * Refreshes work logs by emitting the updated list on every stage of the refreshing process and emits 'fetching'.
    */
   fetchWorklogsVerbose(): void {
-    this.worklogState.setFetching(true);
-
     if (this.fetchWorklogsSubscription) {
       this.fetchWorklogsSubscription.unsubscribe();
     }
+    this.worklogState.setFetching(true);
 
     this.fetchWorklogsSubscription = this.getWorklogsForDateRangeVerbose$(this.visibleDateRange, this.currentUser)
+      .pipe(finalize(() => this.worklogState.setFetching(false)))
       .subscribe({
         next: (worklogs: Worklog[]) => this.worklogState.setWorklogs(worklogs),
-        complete: () => this.worklogState.setFetching(false)
+        error: () => undefined
       });
 
     this.reschedulePeriodicRefreshing();
@@ -145,9 +147,10 @@ export class WorklogFacade {
     }
 
     this.fetchWorklogsSubscription = this.getWorklogsForDateRangeQuiet$(this.visibleDateRange, this.currentUser)
-      .subscribe((worklogs: Worklog[]) => {
-        this.worklogState.setWorklogs(worklogs);
-        this.worklogState.setFetching(false);
+      .pipe(finalize(() => this.worklogState.setFetching(false)))
+      .subscribe({
+        next: (worklogs: Worklog[]) => this.worklogState.setWorklogs(worklogs),
+        error: () => undefined
       });
   }
 
@@ -189,9 +192,9 @@ export class WorklogFacade {
     }
   }
 
-  deleteWorklog(worklog: Worklog): void {
-    this.worklogApi.deleteWorklog$(worklog.issueId, worklog.id).subscribe(() => {
-      this.worklogState.deleteWorklog(worklog.id);
-    });
+  deleteWorklog$(worklog: Worklog): Observable<void> {
+    return this.worklogApi.deleteWorklog$(worklog.issueId, worklog.id).pipe(
+      tap(() => this.worklogState.deleteWorklog(worklog.id))
+    );
   }
 }

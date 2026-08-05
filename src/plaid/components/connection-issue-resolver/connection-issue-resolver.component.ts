@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {AuthInfo} from '../../model/auth-info';
 import {HttpErrorResponse} from '@angular/common/http';
 import {User} from '../../model/user';
@@ -11,15 +11,19 @@ import { Subject } from 'rxjs';
  * Smart component, contains login, lost connection, and error modals and handles login and reconnect actions.
  */
 @Component({
-  selector: 'plaid-connection-issue-resolver',
-  templateUrl: './connection-issue-resolver.component.html',
-  styleUrls: ['./connection-issue-resolver.component.scss']
+    selector: 'plaid-connection-issue-resolver',
+    templateUrl: './connection-issue-resolver.component.html',
+    styleUrls: ['./connection-issue-resolver.component.scss'],
+    standalone: false
 })
 export class ConnectionIssueResolverComponent implements OnInit {
   modalVisible: ConnectionIssueModalVisible = ConnectionIssueModalVisible.NONE;
   authInfo: AuthInfo = { jiraUrl: null, username: null, password: null };
   error: HttpErrorResponse;
   fetching = false;
+  activeLoginMethod: 'oauth' | 'basic' | null = null;
+  oauthError = '';
+  oauthConfiguration = {configured: false, clientId: '', redirectUri: ''};
   startReconnectCountdown = new Subject<void>();
 
   readonly ConnectionIssueModalVisible = ConnectionIssueModalVisible;
@@ -27,6 +31,7 @@ export class ConnectionIssueResolverComponent implements OnInit {
   constructor(private authFacade: AuthFacade, private appStateService: AppStateService) {}
 
   ngOnInit(): void {
+    this.oauthConfiguration = this.authFacade.getOauthConfiguration();
     // Singleton component, no need to unsubscribe
     this.authFacade.getError$().subscribe((authError: HttpErrorResponse) => this.errorUpdated(authError));
     this.authFacade.getAuthenticatedUser$().subscribe(user => this.currentUserUpdated(user));
@@ -42,6 +47,7 @@ export class ConnectionIssueResolverComponent implements OnInit {
   errorUpdated(error: HttpErrorResponse): void {
     this.error = error;
     this.fetching = false;
+    this.activeLoginMethod = null;
   }
 
   currentUserUpdated(user: User): void {
@@ -54,6 +60,20 @@ export class ConnectionIssueResolverComponent implements OnInit {
   login(): void {
     this.authFacade.login(this.authInfo);
     this.fetching = true;
+  }
+
+  async loginWithAtlassian(credentials: {clientId?: string; clientSecret?: string}): Promise<void> {
+    this.fetching = true;
+    this.activeLoginMethod = 'oauth';
+    this.oauthError = '';
+    try {
+      await this.authFacade.loginWithAtlassian({...credentials, jiraUrl: this.authInfo.jiraUrl});
+      this.oauthConfiguration = this.authFacade.getOauthConfiguration();
+    } catch (error) {
+      this.fetching = false;
+      this.activeLoginMethod = null;
+      this.oauthError = error instanceof Error ? error.message : String(error);
+    }
   }
 
   reconnect(): void {

@@ -5,7 +5,7 @@
   (mousedown)="handleClickOutsideEditor($event)"
   [class.dragging]="dragging"
   [class.stretching]="stretching"
->
+  >
   <div
     class="panel-wrapper"
     [class.dark-mode]="darkMode"
@@ -21,16 +21,16 @@ Alt to snap to 1 minute,
 nothing to snap to 5 minutes,
 Shift to snap to 15 minutes,
 Ctrl to snap to 60 minutes."
-  >
+    >
     <div
       #panel
       class="panel"
       [class.dark-mode]="darkMode"
       [style.border-color]="'hsl(' + panelHue + ', ' + panelSaturation + '%, 50%)'"
       (mousedown)="dragStart($event)"
-    >
+      >
       <label>Issue</label>
-      
+
       <!-- Owner/Assignee selector -->
       <div class="owner-selector">
         <div class="input-container">
@@ -47,21 +47,22 @@ Ctrl to snap to 60 minutes."
             [class.cloud-open]="userPickerOpen"
             [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
             title="Click to select a different user or leave empty to see your own tasks. Press Delete or Backspace to clear selection."
-          >
-          <button
-            *ngIf="selectedOwnerDisplay"
-            class="clear-user-button"
-            type="button"
-            (mousedown)="$event.stopPropagation()"
-            (click)="$event.stopPropagation(); selectUser(null)"
-            [disabled]="saving"
-            title="Clear user selection"
-          >
-            ✖️
-          </button>
+            >
+          @if (selectedOwnerDisplay) {
+            <button
+              class="clear-user-button"
+              type="button"
+              (mousedown)="$event.stopPropagation()"
+              (click)="$event.stopPropagation(); selectUser(null)"
+              [disabled]="saving"
+              title="Clear user selection"
+              >
+              ✖️
+            </button>
+          }
         </div>
       </div>
-      
+
       <input
         #issuePickerToggle
         id="issue-picker-toggle"
@@ -73,26 +74,32 @@ Ctrl to snap to 60 minutes."
         (mousedown)="toggleIssuePicker()"
         [class.cloud-open]="issuePickerOpen"
         [tabIndex]="shouldTabIndexBe0() && !worklog?.id ? 0 : -1"
-      >
+        >
       <!-- Icono de precaución si la tarea no tiene estimación -->
-      <span *ngIf="missingEstimate" class="warning-icon" title="Esta tarea no tiene estimación">⚠️</span>
-      <span *ngIf="missingEstimate" class="warning-text">{{ warningMessage }}</span>
+      @if (missingEstimate) {
+        <span class="warning-icon" title="Esta tarea no tiene estimación">⚠️</span>
+      }
+      @if (missingEstimate) {
+        <span class="warning-text">{{ warningMessage }}</span>
+      }
       <!-- Campo para ingresar estimación original -->
-      <div *ngIf="missingEstimate" class="original-estimate-entry">
-        <input
-          type="text"
-          class="tangible"
-          [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
-          placeholder="e.g. 1h 30m"
-          [(ngModel)]="originalEstimateText"
-        />
-        <button
-          class="button small tangible"
-          [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
-          (click)="setOriginalEstimate()"
-          [disabled]="!originalEstimateText"
-        >Set estimate</button>
-      </div>
+      @if (missingEstimate) {
+        <div class="original-estimate-entry">
+          <input
+            type="text"
+            class="tangible"
+            [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
+            placeholder="e.g. 1h 30m"
+            [(ngModel)]="originalEstimateText"
+            />
+          <button
+            class="button small tangible"
+            [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
+            (click)="setOriginalEstimate()"
+            [disabled]="!originalEstimateText"
+          >Set estimate</button>
+        </div>
+      }
       <label for="date-picker-toggle">Date</label>
       <input
         #calendarToggle
@@ -105,7 +112,7 @@ Ctrl to snap to 60 minutes."
         [value]="dateString"
         readonly
         [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
-      >
+        >
       <label for="comment-textarea">Comment</label>
       <textarea
         #commentTextArea
@@ -126,9 +133,13 @@ Ctrl to snap to 60 minutes."
         title=""
         (click)="save()"
         [tabIndex]="shouldTabIndexBe0() ? 0 : -1"
-      >
-        <span *ngIf="saving" class="spinner"></span>
-        <ng-container *ngIf="!saving">{{ this.adding ? 'Add' : 'Save' }}</ng-container>
+        >
+        @if (saving) {
+          <span class="spinner"></span>
+        }
+        @if (!saving) {
+          {{ this.adding ? 'Add' : 'Save' }}
+        }
       </button>
       <button
         #cancelButton

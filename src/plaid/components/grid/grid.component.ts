@@ -11,16 +11,18 @@ import {Worklog} from '../../model/worklog';
 import {DateRange} from '../../model/date-range';
 import {Format} from '../../helpers/format';
 import {User} from 'src/plaid/model/user';
+import {Calendar} from '../../helpers/calendar';
 import {WorklogFacade} from '../../core/worklog/worklog.facade';
 
 /**
  * Container for the entire grid including header, background, footer, time marker, and work log entries.
  */
 @Component({
-  selector: 'plaid-grid',
-  templateUrl: './grid.component.html',
-  styleUrls: ['./grid.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-grid',
+    templateUrl: './grid.component.html',
+    styleUrls: ['./grid.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GridComponent implements OnInit, AfterViewInit {
   static readonly GRID_HEADER_AND_FOOTER_COMBINED_HEIGHT = 50;
@@ -96,7 +98,7 @@ export class GridComponent implements OnInit, AfterViewInit {
       this._worklogs = worklogs
         .filter(worklog =>
           new Date(worklog.started) >= this.dateRange.start &&
-          new Date(worklog.started) < new Date(this.dateRange.end.getTime() + 86400000)
+          new Date(worklog.started) < Calendar.getStartOfNextDay(this.dateRange.end)
           // Worklogs need to be sorted by starting time for the next step.
         ).sort((a, b) => new Date(a.started).getTime() - new Date(b.started).getTime());
 
@@ -138,7 +140,7 @@ export class GridComponent implements OnInit, AfterViewInit {
           // sectionsMaxColumns = [1, 3].
           this.worklogs.filter(worklog =>
             new Date(worklog.started) >= weekday &&
-            new Date(worklog.started) < new Date(weekday.getTime() + 86400000)
+            new Date(worklog.started) < Calendar.getStartOfNextDay(weekday)
           ).forEach(worklog => {
             // First step is to find the first column in which a given worklog will fit (the loop will iterate over the
             // columns in which the worklog doesn't fit).
@@ -400,7 +402,12 @@ export class GridComponent implements OnInit, AfterViewInit {
   }
 
   deleteWorklog(worklog: Worklog): void {
-    this.worklogFacade.deleteWorklog(worklog);
+    this.worklogFacade.deleteWorklog$(worklog).subscribe({
+      error: () => {
+        worklog._deleting = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   /**

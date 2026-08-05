@@ -14,9 +14,13 @@
       [tabIndex]="open ? 0 : -1"
       (mousemove)="this.cancelReconnectCountdown()"
       (focus)="this.cancelReconnectCountdown()"
-    >
-      <span *ngIf="fetching" class="spinner"></span>
-      <ng-container *ngIf="!fetching">Retry</ng-container>
+      >
+      @if (fetching) {
+        <span class="spinner"></span>
+      }
+      @if (!fetching) {
+        Retry
+      }
     </button>
   </div>
 </div>

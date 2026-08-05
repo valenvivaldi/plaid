@@ -1,11 +1,9 @@
 import {Injectable} from '@angular/core';
 import {Worklog, AdfDocument} from '../../model/worklog';
 import {HttpClient} from '@angular/common/http';
-import {SearchResults} from '../../model/search-results';
 import {JqlSearchResults} from '../../model/jql-search-results';
 import {formatDate} from '@angular/common';
 import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
 import {WorklogWithPagination} from '../../model/worklog-with-pagination';
 import {User} from '../../model/user';
 import {DateRange} from '../../model/date-range';
@@ -80,33 +78,19 @@ export class WorklogApi {
   getIssuesForWorklogDateRange$(
     dateRange: DateRange,
     user: User,
-    startAt = 0
-  ): Observable<SearchResults> {
+    nextPageToken?: string
+  ): Observable<JqlSearchResults> {
     const jql = 'worklogAuthor = currentUser() && worklogDate >= "'
       + formatDate(dateRange.start, 'yyyy-MM-dd', 'en-US') + '" && worklogDate <= "'
       + formatDate(dateRange.end, 'yyyy-MM-dd', 'en-US') + '"';
     
     const url = this.searchUrl
       + '?fields=components,issuetype,parent,priority,summary,status'
-      + '&jql=' + encodeURIComponent(jql);
+      + '&maxResults=100'
+      + '&jql=' + encodeURIComponent(jql)
+      + (nextPageToken ? '&nextPageToken=' + encodeURIComponent(nextPageToken) : '');
 
-    // Para compatibilidad, convertimos la respuesta del nuevo formato al antiguo
-    return this.http.get<JqlSearchResults>(url).pipe(
-      map((jqlResults: JqlSearchResults): SearchResults => {
-        // Simulamos el comportamiento de startAt/maxResults del endpoint anterior
-        const maxResults = 50; // Default de Jira
-        return {
-          expand: '',
-          startAt: startAt,
-          maxResults: maxResults,
-          total: jqlResults.isLast ? startAt + (jqlResults.issues?.length || 0) : startAt + maxResults + 1,
-          issues: jqlResults.issues || [],
-          warningMessages: jqlResults.warningMessages,
-          names: jqlResults.names,
-          schema: jqlResults.schema
-        };
-      })
-    );
+    return this.http.get<JqlSearchResults>(url);
   }
 
   /**

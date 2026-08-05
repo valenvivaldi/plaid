@@ -1,44 +1,53 @@
-<div 
+<div
   class="wrapper visible"
-  (mousedown)="onBackdropClick($event)" 
+  (mousedown)="onBackdropClick($event)"
   (keydown)="onKeydown($event)"
->
+  >
   <div class="panel-wrapper visible">
     <div class="panel">
       <div class="panel-title">📋 Next Day Tasks</div>
-      
+
       <div class="section">
         <div class="section-label">Select tasks:</div>
         <div class="picker-controls">
-          <button class="button tangible" (click)="openIssuePicker()" *ngIf="!issuePickerOpen">
-            ➕ Add Jira Task
-          </button>
-          <button class="button tangible close-picker" (click)="closeIssuePicker()" *ngIf="issuePickerOpen">
-            ✅ Done Selecting
-          </button>
+          @if (!issuePickerOpen) {
+            <button class="button tangible" (click)="openIssuePicker()">
+              ➕ Add Jira Task
+            </button>
+          }
+          @if (issuePickerOpen) {
+            <button class="button tangible close-picker" (click)="closeIssuePicker()">
+              ✅ Done Selecting
+            </button>
+          }
         </div>
-        
+
         <!-- List of selected tasks -->
-        <div class="selected-tasks" *ngIf="selectedTasks.length > 0">
-          <div class="task-item" *ngFor="let task of selectedTasks; let i = index">
-            <div class="task-info">
-              <span class="task-key">{{ task.key }}</span>
-              <span class="task-summary">{{ task.fields?.summary || 'No title' }}</span>
-            </div>
-            <button class="remove-task tangible" (click)="removeTask(i)" title="Remove task">×</button>
+        @if (selectedTasks.length > 0) {
+          <div class="selected-tasks">
+            @for (task of selectedTasks; track task; let i = $index) {
+              <div class="task-item">
+                <div class="task-info">
+                  <span class="task-key">{{ task.key }}</span>
+                  <span class="task-summary">{{ task.fields?.summary || 'No title' }}</span>
+                </div>
+                <button class="remove-task tangible" (click)="removeTask(i)" title="Remove task">×</button>
+              </div>
+            }
           </div>
-        </div>
-        
+        }
+
         <!-- Issue Picker Cloud -->
-        <plaid-issue-picker-cloud
-          *ngIf="issuePickerOpen"
-          [(open)]="issuePickerOpen"
-          (issueChange)="onIssueSelected($event)"
-          [keysDisabled]="false"
-          [autoSelectFirstSuggestion]="false"
-        ></plaid-issue-picker-cloud>
+        @if (issuePickerOpen) {
+          <plaid-issue-picker-cloud
+            [(open)]="issuePickerOpen"
+            (issueChange)="onIssueSelected($event)"
+            [keysDisabled]="false"
+            [autoSelectFirstSuggestion]="false"
+          ></plaid-issue-picker-cloud>
+        }
       </div>
-      
+
       <label for="final-message">Final message:</label>
       <textarea
         #finalTextArea
@@ -50,24 +59,27 @@
         (keydown)="onKeydown($event)"
         tabindex="0"
       ></textarea>
-      
+
       <div class="hint-text">
         💡 You can select multiple tasks from Jira and manually edit the text
       </div>
-      
+      @if (errorMessage) {
+        <div class="error-message" role="alert">{{ errorMessage }}</div>
+      }
+
       <div class="buttons-area">
-        <button 
-          class="button primary tangible" 
+        <button
+          class="button primary tangible"
           (click)="onSubmit()"
           tabindex="0"
-        >
+          >
           📝 Log Tasks
         </button>
-        <button 
-          class="button tangible" 
+        <button
+          class="button tangible"
           (click)="onCancel()"
           tabindex="0"
-        >
+          >
           Cancel
         </button>
       </div>

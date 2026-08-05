@@ -5,41 +5,53 @@
     placeholder="Search"
     (input)="inputSearch(searchInput.value);"
     [tabIndex]="open ? 0 : -1"
-  >
-  <span class="spinner" *ngIf="searching"></span>
-  <div class="scrollable-area" *ngIf="searchInput.value">
-    <div class="section-header">Search results</div>
-    <plaid-issue-list-item
-      *ngFor="let res of searchResults"
-      [issue]="res"
-      (issueSelected)="issueSelected(res);"
-      (favoriteChange)="favoriteChange(res, $event)"
-      [keyboardNavigationEnabled]="open && !keysDisabled"
-    ></plaid-issue-list-item>
-  </div>
-  <div class="scrollable-area" *ngIf="!searchInput.value">
-    <!-- Show favorites only when no specific assignee is selected (empty assignee means current user) -->
-    <div class="section-header" *ngIf="favorites.length > 0 && (!assignee || assignee.trim() === '')">Favorites</div>
-    <ng-container *ngIf="!assignee || assignee.trim() === ''">
-      <plaid-issue-list-item
-        *ngFor="let res of favorites"
-        [issue]="res"
-        (issueSelected)="issueSelected(res);"
-        (favoriteChange)="favoriteChange(res, $event)"
-        [keyboardNavigationEnabled]="open && !keysDisabled"
-      ></plaid-issue-list-item>
-    </ng-container>
-    
-    <!-- Group suggestions by status -->
-    <ng-container *ngFor="let group of suggestionsByStatus">
-      <div class="section-header" *ngIf="group.issues.length > 0">{{ group.status }}</div>
-      <plaid-issue-list-item
-        *ngFor="let res of group.issues"
-        [issue]="res"
-        (issueSelected)="issueSelected(res);"
-        (favoriteChange)="favoriteChange(res, $event)"
-        [keyboardNavigationEnabled]="open && !keysDisabled"
-      ></plaid-issue-list-item>
-    </ng-container>
-  </div>
+    >
+  @if (searching) {
+    <span class="spinner"></span>
+  }
+  @if (searchInput.value) {
+    <div class="scrollable-area">
+      <div class="section-header">Search results</div>
+      @for (res of searchResults; track res) {
+        <plaid-issue-list-item
+          [issue]="res"
+          (issueSelected)="issueSelected(res);"
+          (favoriteChange)="favoriteChange(res, $event)"
+          [keyboardNavigationEnabled]="open && !keysDisabled"
+        ></plaid-issue-list-item>
+      }
+    </div>
+  }
+  @if (!searchInput.value) {
+    <div class="scrollable-area">
+      <!-- Show favorites only when no specific assignee is selected (empty assignee means current user) -->
+      @if (favorites.length > 0 && (!assignee || assignee.trim() === '')) {
+        <div class="section-header">Favorites</div>
+      }
+      @if (!assignee || assignee.trim() === '') {
+        @for (res of favorites; track res) {
+          <plaid-issue-list-item
+            [issue]="res"
+            (issueSelected)="issueSelected(res);"
+            (favoriteChange)="favoriteChange(res, $event)"
+            [keyboardNavigationEnabled]="open && !keysDisabled"
+          ></plaid-issue-list-item>
+        }
+      }
+      <!-- Group suggestions by status -->
+      @for (group of suggestionsByStatus; track group) {
+        @if (group.issues.length > 0) {
+          <div class="section-header">{{ group.status }}</div>
+        }
+        @for (res of group.issues; track res) {
+          <plaid-issue-list-item
+            [issue]="res"
+            (issueSelected)="issueSelected(res);"
+            (favoriteChange)="favoriteChange(res, $event)"
+            [keyboardNavigationEnabled]="open && !keysDisabled"
+          ></plaid-issue-list-item>
+        }
+      }
+    </div>
+  }
 </div>

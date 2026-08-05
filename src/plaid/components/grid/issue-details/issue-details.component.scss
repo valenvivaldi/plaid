@@ -84,12 +84,114 @@ p {
     &.red {
       background-color: var(--color-red)
     }
+
+    &.status-clickable {
+      cursor: pointer;
+      transition: filter 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
+      }
+
+      &.loading {
+        opacity: 0.6;
+        cursor: progress;
+      }
+    }
   }
 
   img {
     vertical-align: middle;
     height: 16px;
     margin-right: 4px;
+  }
+}
+
+// Status transitions menu. Rendered with position: fixed so it is not clipped by the worklog panel's overflow: hidden.
+.status-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.status-menu {
+  position: fixed;
+  z-index: 1001;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  min-width: 150px;
+  max-width: 200px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  color: #333;
+
+  li {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    &.applying {
+      opacity: 0.5;
+      cursor: progress;
+    }
+  }
+
+  .status-menu-empty {
+    cursor: default;
+    opacity: 0.6;
+
+    &:hover {
+      background: none;
+    }
+  }
+
+  .status-dot {
+    flex: none;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background: var(--color-gray-4);
+
+    &.green {
+      background: var(--color-green);
+    }
+
+    &.blue {
+      background: var(--color-blue);
+    }
+
+    &.yellow {
+      background: var(--color-orange);
+    }
+
+    &.red {
+      background: var(--color-red);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: #2a2a2a;
+    color: #e0e0e0;
+
+    li:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
   }
 }
 

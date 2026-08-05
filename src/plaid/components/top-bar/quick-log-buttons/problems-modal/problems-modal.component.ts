@@ -1,13 +1,15 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  selector: 'plaid-problems-modal',
-  templateUrl: './problems-modal.component.html',
-  styleUrls: ['./problems-modal.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-problems-modal',
+    templateUrl: './problems-modal.component.html',
+    styleUrls: ['./problems-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProblemsModalComponent implements OnInit {
   @Input() defaultMessage = '';
+  @Input() errorMessage = '';
     @Output() submitMessage = new EventEmitter<string>();
   @Output() cancelModal = new EventEmitter<void>();
 

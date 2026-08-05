@@ -1,39 +1,47 @@
 <div class="quick-log-buttons">
   <!-- Button for Next Day Tasks -->
-  <button 
-    *ngIf="config.nextDayTasksEnabled"
-    class="quick-log-button"
-    [class.logged]="nextDayTasksLogged"
-    (click)="openNextDayTasksModal()"
-    title="Next day tasks"
-  >
-    📋
-  </button>
+  @if (config.nextDayTasksEnabled) {
+    <button
+      type="button"
+      class="quick-log-button toolbar-icon-button"
+      [class.logged]="nextDayTasksLogged"
+      (click)="openNextDayTasksModal()"
+      title="Next day tasks"
+      >
+      📋
+    </button>
+  }
 
   <!-- Button for Problems Found -->
-  <button 
-    *ngIf="config.problemsEnabled"
-    class="quick-log-button"
-    [class.logged]="problemsLogged"
-    (click)="openProblemsModal()"
-    title="Problems found"
-  >
-    🚨
-  </button>
+  @if (config.problemsEnabled) {
+    <button
+      type="button"
+      class="quick-log-button toolbar-icon-button"
+      [class.logged]="problemsLogged"
+      (click)="openProblemsModal()"
+      title="Problems found"
+      >
+      🚨
+    </button>
+  }
 </div>
 
 <!-- Modal for Next Day Tasks -->
-<plaid-next-day-tasks-modal
-  *ngIf="showNextDayTasksModal"
-  [defaultMessage]="config.nextDayTasksDefaultMessage"
-  (submitMessage)="onNextDayTasksSubmit($event)"
-  (cancelModal)="closeNextDayTasksModal()"
-></plaid-next-day-tasks-modal>
+@if (showNextDayTasksModal) {
+  <plaid-next-day-tasks-modal
+    [defaultMessage]="config.nextDayTasksDefaultMessage"
+    [errorMessage]="nextDayTasksError"
+    (submitMessage)="onNextDayTasksSubmit($event)"
+    (cancelModal)="closeNextDayTasksModal()"
+  ></plaid-next-day-tasks-modal>
+}
 
 <!-- Modal for Problems Found -->
-<plaid-problems-modal
-  *ngIf="showProblemsModal"
-  [defaultMessage]="config.problemsDefaultMessage"
-  (submitMessage)="onProblemsSubmit($event)"
-  (cancelModal)="closeProblemsModal()"
-></plaid-problems-modal>
+@if (showProblemsModal) {
+  <plaid-problems-modal
+    [defaultMessage]="config.problemsDefaultMessage"
+    [errorMessage]="problemsError"
+    (submitMessage)="onProblemsSubmit($event)"
+    (cancelModal)="closeProblemsModal()"
+  ></plaid-problems-modal>
+}

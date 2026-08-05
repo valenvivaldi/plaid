@@ -15,10 +15,11 @@ import {environment} from '../../../../environments/environment';
  * account. Presents these actions in a dropdown menu.
  */
 @Component({
-  selector: 'plaid-auth-status',
-  templateUrl: './auth-status.component.html',
-  styleUrls: ['./auth-status.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-auth-status',
+    templateUrl: './auth-status.component.html',
+    styleUrls: ['./auth-status.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AuthStatusComponent {
   readonly appVersion: string = environment.version;

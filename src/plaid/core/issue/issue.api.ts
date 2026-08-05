@@ -5,11 +5,13 @@ import {catchError, map} from 'rxjs/operators';
 import {Issue} from '../../model/issue';
 import {SearchResults} from '../../model/search-results';
 import {JqlSearchResults} from '../../model/jql-search-results';
+import {Transition} from '../../model/transition';
 
 @Injectable({ providedIn: 'root' })
 export class IssueApi {
   private readonly getIssueUrl = '/rest/api/3/issue/{issueIdOrKey}';
   private readonly searchUrl = '/rest/api/3/search/jql';
+  private readonly transitionsUrl = '/rest/api/3/issue/{issueIdOrKey}/transitions';
 
   constructor(private http: HttpClient) { }
 
@@ -64,5 +66,30 @@ export class IssueApi {
         }
       }
     });
+  }
+
+  /**
+   * Fetches the workflow transitions currently available for an issue. Returns an empty list on error.
+   */
+  getTransitions$(issueIdOrKey: string): Observable<Transition[]> {
+    return this.http.get<{ transitions: Transition[] }>(
+      this.transitionsUrl.replace('{issueIdOrKey}', issueIdOrKey)
+    ).pipe(
+      map(res => res.transitions || []),
+      catchError(() => of([]))
+    );
+  }
+
+  /**
+   * Applies a workflow transition to an issue. Resolves to true on success, false on error.
+   */
+  transitionIssue$(issueIdOrKey: string, transitionId: string): Observable<boolean> {
+    return this.http.post(
+      this.transitionsUrl.replace('{issueIdOrKey}', issueIdOrKey),
+      { transition: { id: transitionId } }
+    ).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
   }
 }

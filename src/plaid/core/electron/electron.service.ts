@@ -1,42 +1,72 @@
 import { Injectable } from '@angular/core';
 
-// If you import a module but never use any of the imported values other than as TypeScript types,
-// the resulting javascript file will look as if you never imported the module at all.
-import { ipcRenderer, webFrame, shell } from 'electron';
-import * as childProcess from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+import {AuthInfo} from '../../model/auth-info';
 
+import {Theme} from '../../model/theme';
 @Injectable({
   providedIn: 'root'
 })
 export class ElectronService {
-  ipcRenderer: typeof ipcRenderer;
-  webFrame: typeof webFrame;
-  shell: typeof shell;
-  childProcess: typeof childProcess;
-  fs: typeof fs;
-  path: typeof path;
-
   get isElectron(): boolean {
-    return !!(window && window.process && window.process.type);
+    return window.plaid?.isElectron === true;
   }
 
-  constructor() {
-    // Conditional imports
-    if (this.isElectron) {
-      this.ipcRenderer = window.require('electron').ipcRenderer;
-      this.webFrame = window.require('electron').webFrame;
-      this.shell = window.require('electron').shell;
-
-      this.childProcess = window.require('child_process');
-      this.fs = window.require('fs');
-      this.path = window.require('path');
-
-      // Notes :
-      // * A NodeJS's dependency imported with 'window.require' MUST BE present in `dependencies` of both `app/package.json`
-      // and `package.json (root folder)` --> Limitation of Electron Builder
-      // * A NodeJS's dependency imported with 'import' CAN only be present in `dependencies` of `package.json (root folder)` --> Limitation of Webpack
+  openExternal(url: string): void {
+    const parsed = new URL(url);
+    if (!['https:', 'http:'].includes(parsed.protocol)) {
+      return;
     }
+    if (window.plaid) {
+      void window.plaid.openExternal(parsed.href);
+    } else {
+      window.open(parsed.href, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  request(request: {url: string; method: string; body?: unknown}): Promise<{
+    status: number;
+    statusText: string;
+    headers: Record<string, string>;
+    body: unknown;
+  }> {
+    if (!window.plaid) {
+      return Promise.reject(new Error('Electron bridge is unavailable'));
+    }
+    return window.plaid.request(request);
+  }
+
+  getSavedAuthInfo(): AuthInfo | null {
+    return window.plaid?.auth.getProfile() || null;
+  }
+
+  setAuthInfo(authInfo: AuthInfo): AuthInfo {
+    return window.plaid?.auth.set(authInfo) || authInfo;
+  }
+
+  clearAuthInfo(): void {
+    window.plaid?.auth.clear();
+  }
+
+  getOauthConfiguration(): {configured: boolean; clientId: string; redirectUri: string} {
+    return window.plaid?.oauth.getConfiguration() || {
+      configured: false, clientId: '', redirectUri: 'http://127.0.0.1:43817/oauth/callback'
+    };
+  }
+
+  loginWithAtlassian(options: {jiraUrl: string; clientId?: string; clientSecret?: string}): Promise<AuthInfo> {
+    return window.plaid?.oauth.login(options) ||
+      Promise.reject(new Error('Atlassian browser login is only available in the desktop app'));
+  }
+
+  getSystemDarkMode(): boolean {
+    return window.plaid?.theme.getShouldUseDarkColors() || false;
+  }
+
+  setThemeSource(theme: Theme): void {
+    window.plaid?.theme.setSource(theme);
+  }
+
+  onSystemThemeUpdated(callback: (darkMode: boolean) => void): () => void {
+    return window.plaid?.theme.onUpdated(callback) || (() => undefined);
   }
 }

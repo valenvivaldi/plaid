@@ -1,5 +1,5 @@
-<a class="button both-color-schemes" (mousedown)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen" title="Settings">
-  <svg class="icon"><use href="assets/icons.svg#cog"></use></svg>
+<a class="button both-color-schemes toolbar-icon-button" (mousedown)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen" title="Settings" aria-label="Settings">
+  <span class="toolbar-emoji-icon" aria-hidden="true">⚙️</span>
 </a>
 <div class="dropdown" [class.open]="dropdownOpen">
   <!-- Parent component can accommodate stuff inside the settings dropdown that would not fit outside of it. -->
@@ -8,15 +8,15 @@
   <div class="field-set">
     <label>Show only current day</label>
     <select
-            class="input wide-dropdown"
-            [tabIndex]="dropdownOpen ? 0 : -1"
-            [ngModel]="showToday ? 1 : 0"
-            (ngModelChange)="setShowToday($event == 1)"
-    >
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+      class="input wide-dropdown"
+      [tabIndex]="dropdownOpen ? 0 : -1"
+      [ngModel]="showToday ? 1 : 0"
+      (ngModelChange)="setShowToday($event === 1)"
+      >
+      <option [ngValue]="0">No</option>
+      <option [ngValue]="1">Yes</option>
     </select>
-</div>
+  </div>
   <div class="field-set">
     <label>Working hours</label>
     <input
@@ -28,7 +28,7 @@
       [ngModel]="minutesToTimeString(workingHoursStartMinutes)"
       (ngModelChange)="setWorkingHoursStartMinutes(timeStringToMinutes(workingHoursStart.checkValidity() ? $event : null))"
       (blur)="workingHoursStart.value = minutesToTimeString(workingHoursStartMinutes)"
-    />
+      />
     <label class="input-separator">to</label>
     <input
       class="input time-input"
@@ -39,7 +39,7 @@
       [ngModel]="minutesToTimeString(workingHoursEndMinutes)"
       (ngModelChange)="setWorkingHoursEndMinutes(timeStringToMinutes(workingHoursEnd.checkValidity() ? $event : null))"
       (blur)="workingHoursEnd.value = minutesToTimeString(workingHoursEndMinutes)"
-    />
+      />
   </div>
   <div class="field-set">
     <label>Working days</label>
@@ -48,8 +48,10 @@
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="workingDaysStart?.toString()"
       (ngModelChange)="setWorkingDaysStart(+$event)"
-    >
-      <option *ngFor="let day of weekdays; index as i" [value]="i" [disabled]="i > workingDaysEnd">{{ day }}</option>
+      >
+      @for (day of weekdays; track day; let i = $index) {
+        <option [value]="i" [disabled]="i > workingDaysEnd">{{ day }}</option>
+      }
     </select>
     <label class="input-separator">to</label>
     <select
@@ -57,8 +59,10 @@
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="workingDaysEnd?.toString()"
       (ngModelChange)="setWorkingDaysEnd(+$event)"
-    >
-      <option *ngFor="let day of weekdays; index as i" [value]="i" [disabled]="i < workingDaysStart">{{ day }}</option>
+      >
+      @for (day of weekdays; track day; let i = $index) {
+        <option [value]="i" [disabled]="i < workingDaysStart">{{ day }}</option>
+      }
     </select>
   </div>
   <div class="field-set">
@@ -67,10 +71,10 @@
       class="input wide-dropdown"
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="hideWeekend ? 1 : 0"
-      (ngModelChange)="setHideWeekend($event == 1)"
-    >
-      <option value="0">Gray out</option>
-      <option value="1">Hide</option>
+      (ngModelChange)="setHideWeekend($event === 1)"
+      >
+      <option [ngValue]="0">Gray out</option>
+      <option [ngValue]="1">Hide</option>
     </select>
   </div>
   <div class="field-set">
@@ -80,7 +84,7 @@
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="refreshIntervalMinutes?.toString()"
       (ngModelChange)="setRefreshIntervalMinutes(+$event)"
-    >
+      >
       <option value="0">Disabled</option>
       <option value="1">Every minute</option>
       <option value="2">Every 2 minutes</option>
@@ -97,7 +101,7 @@
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="theme"
       (ngModelChange)="setTheme($event)"
-    >
+      >
       <option value="system">System default</option>
       <option value="dark">Enabled</option>
       <option value="light">Disabled</option>
@@ -107,7 +111,7 @@
   <!-- Quick Log Configuration Section -->
   <div class="section-divider"></div>
   <div class="section-title">⚡ Quick Log</div>
-  
+
   <!-- Quick Log Time Configuration -->
   <div class="field-set">
     <label for="quick-log-time">⏰ Quick Log time (for both tasks and problems)</label>
@@ -119,14 +123,14 @@
         [tabIndex]="dropdownOpen ? 0 : -1"
         [ngModel]="minutesToTimeString(quickLogTimeMinutes)"
         (ngModelChange)="setQuickLogTimeMinutes(timeStringToMinutes($event))"
-      />
+        />
     </div>
   </div>
 
   <!-- Next Day Tasks Section -->
   <div class="subsection-divider"></div>
   <div class="subsection-title">📋 Next Day Tasks</div>
-  
+
   <div class="field-set">
     <label for="quick-log-next-day">Status</label>
     <select
@@ -134,43 +138,47 @@
       class="input wide-dropdown"
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="quickLogNextDayEnabled ? 1 : 0"
-      (ngModelChange)="setQuickLogNextDayEnabled($event == 1)"
-    >
-      <option value="0">Disabled</option>
-      <option value="1">Enabled</option>
+      (ngModelChange)="setQuickLogNextDayEnabled($event === 1)"
+      >
+      <option [ngValue]="0">Disabled</option>
+      <option [ngValue]="1">Enabled</option>
     </select>
   </div>
-  
-  <div class="field-set" *ngIf="quickLogNextDayEnabled">
-    <label for="quick-log-next-day-message">Default message</label>
-    <input
-      id="quick-log-next-day-message"
-      class="input wide-input"
-      type="text"
-      [tabIndex]="dropdownOpen ? 0 : -1"
-      [ngModel]="quickLogNextDayMessage"
-      (ngModelChange)="setQuickLogNextDayMessage($event)"
-      placeholder="Review pending tasks for tomorrow"
-    />
-  </div>
-  
-  <div class="field-set" *ngIf="quickLogNextDayEnabled">
-    <label for="quick-log-next-day-task-code">Task code (optional - for 1min worklog)</label>
-    <input
-      id="quick-log-next-day-task-code"
-      class="input wide-input"
-      type="text"
-      [tabIndex]="dropdownOpen ? 0 : -1"
-      [ngModel]="quickLogNextDayTaskCode"
-      (ngModelChange)="setQuickLogNextDayTaskCode($event)"
-      placeholder="e.g., PROJ-123 (leave empty to disable)"
-    />
-  </div>
-  
+
+  @if (quickLogNextDayEnabled) {
+    <div class="field-set">
+      <label for="quick-log-next-day-message">Default message</label>
+      <input
+        id="quick-log-next-day-message"
+        class="input wide-input"
+        type="text"
+        [tabIndex]="dropdownOpen ? 0 : -1"
+        [ngModel]="quickLogNextDayMessage"
+        (ngModelChange)="setQuickLogNextDayMessage($event)"
+        placeholder="Review pending tasks for tomorrow"
+        />
+    </div>
+  }
+
+  @if (quickLogNextDayEnabled) {
+    <div class="field-set">
+      <label for="quick-log-next-day-task-code">Task code (required for 1min worklog)</label>
+      <input
+        id="quick-log-next-day-task-code"
+        class="input wide-input"
+        type="text"
+        [tabIndex]="dropdownOpen ? 0 : -1"
+        [ngModel]="quickLogNextDayTaskCode"
+        (ngModelChange)="setQuickLogNextDayTaskCode($event)"
+        placeholder="e.g., PROJ-123 (leave empty to disable)"
+        />
+    </div>
+  }
+
   <!-- Problems Found Section -->
   <div class="subsection-divider"></div>
   <div class="subsection-title">🚨 Problems Found</div>
-  
+
   <div class="field-set">
     <label for="quick-log-problems">Status</label>
     <select
@@ -178,43 +186,47 @@
       class="input wide-dropdown"
       [tabIndex]="dropdownOpen ? 0 : -1"
       [ngModel]="quickLogProblemsEnabled ? 1 : 0"
-      (ngModelChange)="setQuickLogProblemsEnabled($event == 1)"
-    >
-      <option value="0">Disabled</option>
-      <option value="1">Enabled</option>
+      (ngModelChange)="setQuickLogProblemsEnabled($event === 1)"
+      >
+      <option [ngValue]="0">Disabled</option>
+      <option [ngValue]="1">Enabled</option>
     </select>
   </div>
-  
-  <div class="field-set" *ngIf="quickLogProblemsEnabled">
-    <label for="quick-log-problems-message">Default message</label>
-    <input
-      id="quick-log-problems-message"
-      class="input wide-input"
-      type="text"
-      [tabIndex]="dropdownOpen ? 0 : -1"
-      [ngModel]="quickLogProblemsMessage"
-      (ngModelChange)="setQuickLogProblemsMessage($event)"
-      placeholder="No issues found"
-    />
-  </div>
-  
-  <div class="field-set" *ngIf="quickLogProblemsEnabled">
-    <label for="quick-log-problems-task-code">Task code (optional - for 1min worklog)</label>
-    <input
-      id="quick-log-problems-task-code"
-      class="input wide-input"
-      type="text"
-      [tabIndex]="dropdownOpen ? 0 : -1"
-      [ngModel]="quickLogProblemsTaskCode"
-      (ngModelChange)="setQuickLogProblemsTaskCode($event)"
-      placeholder="e.g., PROJ-456 (leave empty to disable)"
-    />
-  </div>
+
+  @if (quickLogProblemsEnabled) {
+    <div class="field-set">
+      <label for="quick-log-problems-message">Default message</label>
+      <input
+        id="quick-log-problems-message"
+        class="input wide-input"
+        type="text"
+        [tabIndex]="dropdownOpen ? 0 : -1"
+        [ngModel]="quickLogProblemsMessage"
+        (ngModelChange)="setQuickLogProblemsMessage($event)"
+        placeholder="No issues found"
+        />
+    </div>
+  }
+
+  @if (quickLogProblemsEnabled) {
+    <div class="field-set">
+      <label for="quick-log-problems-task-code">Task code (required for 1min worklog)</label>
+      <input
+        id="quick-log-problems-task-code"
+        class="input wide-input"
+        type="text"
+        [tabIndex]="dropdownOpen ? 0 : -1"
+        [ngModel]="quickLogProblemsTaskCode"
+        (ngModelChange)="setQuickLogProblemsTaskCode($event)"
+        placeholder="e.g., PROJ-456 (leave empty to disable)"
+        />
+    </div>
+  }
 
   <!-- Worklog Template Configuration Section -->
   <div class="section-divider"></div>
   <div class="section-title">📝 Worklog Template</div>
-  
+
   <div class="field-set">
     <label for="worklog-default-template">Default comment template</label>
     <textarea

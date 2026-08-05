@@ -15,10 +15,11 @@ import { Observable } from 'rxjs';
  * Dumb component, presents lost connection modal and delegates actions to parent component.
  */
 @Component({
-  selector: 'plaid-lost-connection-modal',
-  templateUrl: './lost-connection-modal.component.html',
-  styleUrls: ['../connection-issue-resolver.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-lost-connection-modal',
+    templateUrl: './lost-connection-modal.component.html',
+    styleUrls: ['../connection-issue-resolver.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LostConnectionModalComponent implements OnInit {
   reconnectCountdown: Timeout;

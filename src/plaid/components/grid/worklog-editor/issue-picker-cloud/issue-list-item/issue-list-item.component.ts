@@ -7,9 +7,10 @@ import {AuthFacade} from '../../../../../core/auth/auth.facade';
  * the item and adding/removing favorite status.
  */
 @Component({
-  selector: 'plaid-issue-list-item',
-  templateUrl: './issue-list-item.component.html',
-  styleUrls: ['./issue-list-item.component.scss']
+    selector: 'plaid-issue-list-item',
+    templateUrl: './issue-list-item.component.html',
+    styleUrls: ['./issue-list-item.component.scss'],
+    standalone: false
 })
 export class IssueListItemComponent implements OnInit {
   jiraURL: string;

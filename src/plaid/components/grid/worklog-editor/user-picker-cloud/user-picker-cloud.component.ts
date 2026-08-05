@@ -16,10 +16,11 @@ import { UserApi, User } from '../../../../core/user/user.api';
  * Presents a dropdown for selecting users with search functionality, avatars and names.
  */
 @Component({
-  selector: 'plaid-user-picker-cloud',
-  templateUrl: './user-picker-cloud.component.html',
-  styleUrls: ['./user-picker-cloud.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-user-picker-cloud',
+    templateUrl: './user-picker-cloud.component.html',
+    styleUrls: ['./user-picker-cloud.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UserPickerCloudComponent implements OnInit {
   private _open = false;

@@ -15,9 +15,13 @@
   <plaid-login-modal
     [open]="modalVisible === ConnectionIssueModalVisible.LOGIN"
     [fetching]="fetching"
+    [activeLoginMethod]="activeLoginMethod"
     [authInfo]="authInfo"
     [error]="error"
+    [oauthError]="oauthError"
+    [oauthConfiguration]="oauthConfiguration"
     (login)="login()"
+    (atlassianLogin)="loginWithAtlassian($event)"
     (closeModal)="closeModal()"
   ></plaid-login-modal>
 </div>

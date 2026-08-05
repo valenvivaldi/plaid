@@ -1,15 +1,22 @@
-const {app, BrowserWindow, Menu} = require('electron');
+const {app, BrowserWindow, Menu, nativeTheme} = require('electron');
+const path = require('path');
 const {autoUpdater} = require('electron-updater');
 const {getNewWindowRect, getNewWindowMaximized, saveWindowState} = require('./window-state');
+const {registerElectronBridge} = require('./electron-main-bridge');
 
 let firstWindowCreated = false;
 
-// Workaround for https://github.com/electron/electron/issues/23664
-app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
+registerElectronBridge();
+  const titleBarColors = () => nativeTheme.shouldUseDarkColors
+    ? {color: '#121212', symbolColor: '#ffffff', height: 34}
+    : {color: '#f2f2f2', symbolColor: '#202020', height: 34};
+
 
 function createWindow(dev) {
   if (!firstWindowCreated) { // Check for update once in the process (if subsequent windows are opened, don't check again)
-    autoUpdater.checkForUpdatesAndNotify(); // Note to self: don't mess that one up!
+    void autoUpdater.checkForUpdatesAndNotify().catch(error => {
+      console.warn('Automatic update check failed:', error.message);
+    });
   }
 
   const windowRect = getNewWindowRect({
@@ -26,27 +33,34 @@ function createWindow(dev) {
     minWidth: 400,
     minHeight: 200,
     show: false,
+    darkTheme: process.platform === 'linux' && nativeTheme.shouldUseDarkColors,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1e1e1e' : '#ffffff',
+    titleBarStyle: 'hidden',
+    titleBarOverlay: titleBarColors(),
     webPreferences: {
-      nodeIntegration: true,
-      // Electron >= 12 defaults contextIsolation to true, which hides `window.require`
-      // from the renderer's main world and breaks ElectronService (shell.openExternal,
-      // ipcRenderer, etc). Keep it false to preserve the pre-Electron-12 behavior.
-      contextIsolation: false,
-      enableRemoteModule: true,
-      webSecurity: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      webSecurity: true,
+      // Bridge a minimal, safe API (window.electron.openExternal) into the renderer via contextBridge. shell is only
+      // reachable from the main process under Electron's default contextIsolation, so external links go through IPC.
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
+  const updateTitleBar = () => window.setTitleBarOverlay(titleBarColors());
+  nativeTheme.on('updated', updateTitleBar);
+  window.on('closed', () => nativeTheme.removeListener('updated', updateTitleBar));
   window.on('close', () => {
     saveWindowState(window.getNormalBounds(), window.isMaximized());
   });
 
-  // Strip User-Agent request headers due to restrictions in Jira REST API:
-  // https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html
-  window.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-    delete details.requestHeaders['User-Agent'];
-    callback({cancel: false, requestHeaders: details.requestHeaders});
+  window.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
+  window.webContents.on('will-navigate', event => {
+    event.preventDefault();
   });
+
+  window.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
 
   window.webContents.addListener('context-menu', (e, params) => {
     if (params.isEditable || params.inputFieldType !== 'none') {

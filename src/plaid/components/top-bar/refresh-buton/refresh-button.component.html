@@ -1,10 +1,11 @@
 <a
-  class="button both-color-schemes"
+  class="button both-color-schemes toolbar-icon-button"
   [class.disabled]="disabled"
   (click)="doRefresh()"
   #button
   [class.active]="buttonActive"
-  title="Refresh (F5)"
+  title="Refresh worklogs (F5)"
+  aria-label="Refresh worklogs"
 >
-  <svg class="icon"><use href="assets/icons.svg#refresh"></use></svg>
+  <span class="toolbar-emoji-icon" aria-hidden="true">🔄</span>
 </a>

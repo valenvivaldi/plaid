@@ -1,17 +1,21 @@
 <div class="hours-labels" [style.height.px]="pixelsPerMinute * 1440">
-  <div
-    *ngFor="let hour of hoursLabels; index as i"
-    class="hours-label"
-    [style.height.px]="pixelsPerMinute * 60"
-    [style.top.px]="pixelsPerMinute * 60 * i"
-  >{{ hour }}</div>
+  @for (hour of hoursLabels; track hour; let i = $index) {
+    <div
+      class="hours-label"
+      [style.height.px]="pixelsPerMinute * 60"
+      [style.top.px]="pixelsPerMinute * 60 * i"
+    >{{ hour }}</div>
+  }
 </div>
 <div class="horizontal-dividers">
-  <div
-    *ngFor="let _ of minutesGrid; index as i"
-    class="weekday-tenmin"
-    [style.height.px]="pixelsPerMinute * 5 + 1"
-    [style.top.px]="pixelsPerMinute * 10 * i"
-  ></div>
+  @for (_ of minutesGrid; track _; let i = $index) {
+    <div
+      class="weekday-tenmin"
+      [style.height.px]="pixelsPerMinute * 5 + 1"
+      [style.top.px]="pixelsPerMinute * 10 * i"
+    ></div>
+  }
 </div>
-<div class="weekday" *ngFor="let _ of weekdays"></div>
+@for (_ of weekdays; track _) {
+  <div class="weekday"></div>
+}

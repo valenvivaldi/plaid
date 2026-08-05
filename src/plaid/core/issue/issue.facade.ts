@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable, of, zip} from 'rxjs';
 import {Issue} from '../../model/issue';
+import {Transition} from '../../model/transition';
 import {IssueApi} from './issue.api';
 import {map, switchMap, tap} from 'rxjs/operators';
 import {IssueState} from './issue.state';
@@ -37,7 +38,6 @@ export class IssueFacade {
     if (assignee && assignee.trim() !== '') {
       // For a specific assignee, return issues assigned to that user (excluding Done/Closed)
       const jql = `assignee = "${assignee}" and status not in (Done, Closed) order by updatedDate desc`;
-      console.debug('[IssueFacade] getSuggestionsFromApi$ - assignee:', assignee, 'jql:', jql);
       return this.issueApi
         .search$(jql, 50).pipe(
           map(res => res.issues || [])
@@ -47,7 +47,6 @@ export class IssueFacade {
     // No assignee specified: get ALL tasks assigned to current user (excluding Done/Closed/Won't Fix)
     // This includes bugs, stories, tasks, etc., regardless of who created or changed them
     const jqlCurrent = `assignee = currentUser() and status not in (Done, Closed, "WON'T FIX") order by status ASC, updated DESC`;
-    console.debug('[IssueFacade] getSuggestionsFromApi$ - current user jql:', jqlCurrent);
     return this.issueApi
       .search$(jqlCurrent, 50).pipe(
         map(res => res.issues || [])
@@ -57,7 +56,6 @@ export class IssueFacade {
   private getFavoritesFromApi$(): Observable<Issue[]> {
     const keys: string[] = this.favoriteKeys[this.authFacade.getJiraURL()] || [];
     if (!keys || keys.length === 0) {
-      console.debug('[IssueFacade] getFavoritesFromApi$ - no favorite keys, returning empty array');
       return of([]);
     }
     const removedKeysIndexes: number[] = [];
@@ -117,13 +115,10 @@ export class IssueFacade {
 
   fetchFavoritesAndSuggestions(assignee?: string): void {
     // Fetch favorites first so UI can show them immediately, then suggestions
-    console.debug('[IssueFacade] fetchFavoritesAndSuggestions - assignee:', assignee);
     this.getFavoritesFromApi$().subscribe(favorites => {
-      console.debug('[IssueFacade] fetched favorites count =', (favorites || []).length);
       this.issueState.setFavorites(favorites);
       // Now fetch suggestions
       this.getSuggestionsFromApi$(assignee).subscribe(suggestions => {
-        console.debug('[IssueFacade] fetched suggestions count =', (suggestions || []).length);
         this.issueState.setSuggestions(suggestions);
       });
     });
@@ -170,5 +165,13 @@ export class IssueFacade {
       this.favorites = this.favorites.filter(favorite => favorite.key !== issue.key);
       this.issueState.setFavorites(this.favorites);
     }
+  }
+
+  getTransitions$(issueIdOrKey: string): Observable<Transition[]> {
+    return this.issueApi.getTransitions$(issueIdOrKey);
+  }
+
+  transitionIssue$(issueIdOrKey: string, transitionId: string): Observable<boolean> {
+    return this.issueApi.transitionIssue$(issueIdOrKey, transitionId);
   }
 }

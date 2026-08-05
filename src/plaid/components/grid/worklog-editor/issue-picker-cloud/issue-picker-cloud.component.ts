@@ -18,10 +18,11 @@ import {debounceTime, switchMap, tap} from 'rxjs/operators';
  * favorite issues, delegates selected issue to parent component.
  */
 @Component({
-  selector: 'plaid-issue-picker-cloud',
-  templateUrl: './issue-picker-cloud.component.html',
-  styleUrls: ['./issue-picker-cloud.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'plaid-issue-picker-cloud',
+    templateUrl: './issue-picker-cloud.component.html',
+    styleUrls: ['./issue-picker-cloud.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class IssuePickerCloudComponent implements OnInit {
   private _open = false;
@@ -99,9 +100,7 @@ export class IssuePickerCloudComponent implements OnInit {
       this.updateFavoritesAndSuggestionsAndEmitSuggestion.subscribe(() => {
         // ensure @Input() assignee has been updated by Angular change detection
         // before we call facade.fetchFavoritesAndSuggestions
-        console.debug('[IssuePickerCloud] update trigger received, assignee =', this.assignee);
         setTimeout(() => {
-          console.debug('[IssuePickerCloud] calling fetchFavoritesAndSuggestions with assignee =', this.assignee);
           this.issueFacade.fetchFavoritesAndSuggestions(this.assignee);
         }, 0);
       });
@@ -125,7 +124,6 @@ export class IssuePickerCloudComponent implements OnInit {
 
     // Trigger initial fetch for current assignee to populate suggestions/favorites on mount
     setTimeout(() => {
-      console.debug('[IssuePickerCloud] ngOnInit initial fetch with assignee =', this.assignee);
       this.issueFacade.fetchFavoritesAndSuggestions(this.assignee);
     }, 0);
   }

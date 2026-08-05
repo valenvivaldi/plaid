@@ -69,7 +69,6 @@ export class UserPreferencesService {
     new BehaviorSubject<string>((() => {
       const saved = localStorage.getItem(this.WORKLOG_DEFAULT_TEMPLATE);
       const defaultValue = '**Avances del dia de hoy**\n\n\n**En que punto estamos**\n\n';
-      console.log('Initializing worklog template. Saved value:', saved);
       // Use saved value even if empty string, only use default if null (not saved yet)
       return saved !== null ? saved : defaultValue;
     })());
@@ -194,7 +193,7 @@ export class UserPreferencesService {
 
   setShowToday(value: boolean): void {
     this.showToday.next(value);
-    localStorage.setItem(this.SHOW_TODAY, value.toString());
+    localStorage.setItem(this.SHOW_TODAY, value ? '1' : '0');
     
     // When showToday changes, we need to update the visible days
     // This will trigger the AppStateService to recalculate the date range
@@ -313,10 +312,8 @@ export class UserPreferencesService {
 
   // Worklog default template configuration methods
   setWorklogDefaultTemplate(value: string): void {
-    console.log('Setting worklog template to:', value);
     this.worklogDefaultTemplate.next(value);
     localStorage.setItem(this.WORKLOG_DEFAULT_TEMPLATE, value);
-    console.log('Saved to localStorage:', localStorage.getItem(this.WORKLOG_DEFAULT_TEMPLATE));
   }
 
   getWorklogDefaultTemplate$(): Observable<string> {
