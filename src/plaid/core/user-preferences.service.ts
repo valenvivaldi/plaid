@@ -12,7 +12,6 @@ export class UserPreferencesService {
   private readonly HIDE_WEEKEND = 'HIDE_WEEKEND';
   private readonly REFRESH_INTERVAL = 'REFRESH_INTERVAL';
   private readonly THEME = 'THEME';
-  private readonly DAYS_SHOWN = 'DAYS_SHOWN';
   private readonly SHOW_TODAY = 'SHOW_TODAY';
   private readonly FAVORITE_KEYS = 'FAVORITE_KEYS';
   private readonly QUICK_LOG_NEXT_DAY_MESSAGE = 'QUICK_LOG_NEXT_DAY_MESSAGE';
@@ -25,25 +24,25 @@ export class UserPreferencesService {
   private readonly WORKLOG_DEFAULT_TEMPLATE = 'WORKLOG_DEFAULT_TEMPLATE';
 
   private workingHoursStartMinutes: BehaviorSubject<number> =
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.WORKING_HOURS_START_MINUTES) || 540));
+    new BehaviorSubject<number>(this.readNumber(this.WORKING_HOURS_START_MINUTES, 540, 0, 1439));
   private workingHoursEndMinutes: BehaviorSubject<number> =
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.WORKING_HOURS_END_MINUTES) || 1020));
+    new BehaviorSubject<number>(this.readNumber(this.WORKING_HOURS_END_MINUTES, 1020, 1, 1440));
   private workingDaysStart: BehaviorSubject<number> =
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.WORKING_DAYS_START) || 1));
+    new BehaviorSubject<number>(this.readNumber(this.WORKING_DAYS_START, 1, 0, 6));
   private workingDaysEnd: BehaviorSubject<number> =
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.WORKING_DAYS_END) || 5));
+    new BehaviorSubject<number>(this.readNumber(this.WORKING_DAYS_END, 5, 0, 6));
   private hideWeekend: BehaviorSubject<boolean> =
     new BehaviorSubject<boolean>(localStorage.getItem(this.HIDE_WEEKEND) === '1');
   private visibleDaysStart: BehaviorSubject<number> = new BehaviorSubject<number>(
-    localStorage.getItem(this.HIDE_WEEKEND) === '1' ? Number(localStorage.getItem(this.WORKING_DAYS_START) || 1) : 0
+    localStorage.getItem(this.HIDE_WEEKEND) === '1' ? this.readNumber(this.WORKING_DAYS_START, 1, 0, 6) : 0
   );
   private visibleDaysEnd: BehaviorSubject<number> = new BehaviorSubject<number>(
-    localStorage.getItem(this.HIDE_WEEKEND) === '1' ? Number(localStorage.getItem(this.WORKING_DAYS_END) || 5) : 6
+    localStorage.getItem(this.HIDE_WEEKEND) === '1' ? this.readNumber(this.WORKING_DAYS_END, 5, 0, 6) : 6
   );
   private refreshIntervalMinutes: BehaviorSubject<number> =
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.REFRESH_INTERVAL) || 0));
+    new BehaviorSubject<number>(this.readNumber(this.REFRESH_INTERVAL, 0, 0, 1440));
   private theme: BehaviorSubject<Theme> =
-    new BehaviorSubject<Theme>((localStorage.getItem(this.THEME) || 'system') as Theme);
+    new BehaviorSubject<Theme>(this.readTheme());
   private showToday: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(localStorage.getItem(this.SHOW_TODAY) === '1');
   private favoriteKeys: BehaviorSubject<FavoriteKeys> =
     new BehaviorSubject<FavoriteKeys>(this.readFavoriteKeys());
@@ -62,7 +61,7 @@ export class UserPreferencesService {
   private quickLogProblemsTaskCode: BehaviorSubject<string> = 
     new BehaviorSubject<string>(localStorage.getItem(this.QUICK_LOG_PROBLEMS_TASK_CODE) || '');
   private quickLogTimeMinutes: BehaviorSubject<number> = 
-    new BehaviorSubject<number>(Number(localStorage.getItem(this.QUICK_LOG_TIME_MINUTES) || 540));
+    new BehaviorSubject<number>(this.readNumber(this.QUICK_LOG_TIME_MINUTES, 540, 0, 1439));
   
   // Worklog default template configuration
   private worklogDefaultTemplate: BehaviorSubject<string> = 
@@ -72,6 +71,29 @@ export class UserPreferencesService {
       // Use saved value even if empty string, only use default if null (not saved yet)
       return saved !== null ? saved : defaultValue;
     })());
+
+  private readNumber(key: string, fallback: number, min: number, max: number): number {
+    const raw = localStorage.getItem(key);
+    const value = raw === null || raw.trim() === "" ? Number.NaN : Number(raw);
+    if (Number.isFinite(value) && Number.isInteger(value) && value >= min && value <= max) {
+      return value;
+    }
+    if (raw !== null) {
+      localStorage.removeItem(key);
+    }
+    return fallback;
+  }
+
+  private readTheme(): Theme {
+    const value = localStorage.getItem(this.THEME);
+    if (value === "system" || value === "light" || value === "dark") {
+      return value;
+    }
+    if (value !== null) {
+      localStorage.removeItem(this.THEME);
+    }
+    return "system";
+  }
 
   private readFavoriteKeys(): FavoriteKeys {
     try {

@@ -1,11 +1,14 @@
 <div 
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="problems-modal-title"
   class="wrapper visible"
   (mousedown)="onBackdropClick($event)" 
   (keydown)="onKeydown($event)"
 >
   <div class="panel-wrapper visible">
     <div class="panel">
-      <label for="problems-text">🚨 Problems Found</label>
+      <label id="problems-modal-title" for="problems-text">🚨 Problems Found</label>
       <textarea
         #textArea
         id="problems-text"

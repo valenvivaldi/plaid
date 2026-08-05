@@ -5,7 +5,7 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  OnInit,
+  HostListener,
   Output
 } from '@angular/core';
 import {DateRange} from '../../../model/date-range';
@@ -24,7 +24,7 @@ import Timeout = NodeJS.Timeout;
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class DateRangePickerComponent implements OnInit {
+export class DateRangePickerComponent {
   _month: Date;
   today: Date;
   days: Date[][];
@@ -84,27 +84,25 @@ export class DateRangePickerComponent implements OnInit {
   constructor(private ref: ElementRef, private cdr: ChangeDetectorRef) {
   }
 
-  ngOnInit(): void {
-    // Singleton component, no need to unbind events
-    addEventListener('keydown', (e: KeyboardEvent) => {
-      if (!this.shortcutsDisabled && !e.repeat) {
-        if (e.key === 'F4') {
-          this.decrementWeekButtonActive = true;
-          this.decrementWeek();
-          setTimeout(() => {
-            this.decrementWeekButtonActive = false;
-            this.cdr.detectChanges();
-          }, 50);
-        } else if (e.key === 'F6') {
-          this.incrementWeekButtonActive = true;
-          this.incrementWeek();
-          setTimeout(() => {
-            this.incrementWeekButtonActive = false;
-            this.cdr.detectChanges();
-          }, 50);
-        }
+  @HostListener("window:keydown", ['$event'])
+  onShortcutKeydown(e: KeyboardEvent): void {
+    if (!this.shortcutsDisabled && !e.repeat) {
+      if (e.key === "F4") {
+        this.decrementWeekButtonActive = true;
+        this.decrementWeek();
+        setTimeout(() => {
+          this.decrementWeekButtonActive = false;
+          this.cdr.detectChanges();
+        }, 50);
+      } else if (e.key === "F6") {
+        this.incrementWeekButtonActive = true;
+        this.incrementWeek();
+        setTimeout(() => {
+          this.incrementWeekButtonActive = false;
+          this.cdr.detectChanges();
+        }, 50);
       }
-    });
+    }
   }
 
   set month(month: Date) {
@@ -118,8 +116,9 @@ export class DateRangePickerComponent implements OnInit {
   /**
    * Closes dropdown, if user clicked anywhere outside it.
    */
+  @HostListener("window:mousedown", ["$event"])
   onMousedown: (event: MouseEvent) => void = (event: MouseEvent) => {
-    if (!(this.ref.nativeElement as Node).contains(event.target as Node)) {
+    if (this.calendarOpen && !(this.ref.nativeElement as Node).contains(event.target as Node)) {
       this.calendarOpen = false;
       this.cdr.detectChanges();
     }
@@ -128,8 +127,9 @@ export class DateRangePickerComponent implements OnInit {
   /**
    * Closes dropdown, if user presses Escape.
    */
+  @HostListener("window:keydown", ["$event"])
   onKeydown: (event: KeyboardEvent) => void = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
+    if (this.calendarOpen && event.key === 'Escape') {
       this.calendarOpen = false;
       this.cdr.detectChanges();
     }
@@ -156,11 +156,6 @@ export class DateRangePickerComponent implements OnInit {
       const curTime: Date = new Date();
       this.today = new Date(curTime.getFullYear(), curTime.getMonth(), curTime.getDate());
 
-      addEventListener('mousedown', this.onMousedown);
-      addEventListener('keydown', this.onKeydown);
-    } else {
-      removeEventListener('mousedown', this.onMousedown);
-      removeEventListener('keydown', this.onKeydown);
     }
   }
 

@@ -1,7 +1,7 @@
-<a class="button both-color-schemes toolbar-icon-button" (mousedown)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen" title="Settings" aria-label="Settings">
+<button type="button" class="button both-color-schemes toolbar-icon-button" (click)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen" title="Settings" aria-label="Settings" [attr.aria-expanded]="dropdownOpen" aria-controls="settings-menu">
   <span class="toolbar-emoji-icon" aria-hidden="true">⚙️</span>
-</a>
-<div class="dropdown" [class.open]="dropdownOpen">
+</button>
+<div id="settings-menu" class="dropdown" [attr.aria-hidden]="!dropdownOpen" [class.open]="dropdownOpen">
   <!-- Parent component can accommodate stuff inside the settings dropdown that would not fit outside of it. -->
   <ng-content></ng-content>
 

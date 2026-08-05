@@ -5,6 +5,7 @@ import {
   Component,
   ElementRef,
   Input,
+  OnDestroy,
   OnInit
 } from '@angular/core';
 import {Worklog} from '../../model/worklog';
@@ -24,7 +25,7 @@ import {WorklogFacade} from '../../core/worklog/worklog.facade';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class GridComponent implements OnInit, AfterViewInit {
+export class GridComponent implements OnInit, AfterViewInit, OnDestroy {
   static readonly GRID_HEADER_AND_FOOTER_COMBINED_HEIGHT = 50;
 
   days: Date[];
@@ -36,6 +37,7 @@ export class GridComponent implements OnInit, AfterViewInit {
   _pixelsPerMinute: number;
   gridHeight = 0;
   timeout: ReturnType<typeof setTimeout> | null;
+  addHintsIntervalHandle: ReturnType<typeof setInterval> | null = null;
   editedWorklog: Worklog;
   _workingDaysStart: number;
   _workingDaysEnd: number;
@@ -313,8 +315,20 @@ export class GridComponent implements OnInit, AfterViewInit {
    * Update add hints every minute to keep up with current time marker.
    */
   ngOnInit(): void {
-    // Singleton component, no need to clear interval
-    setInterval(() => this.updateAddHints(), 60000);
+    this.addHintsIntervalHandle =
+      setInterval(() => this.updateAddHints(), 60000);
+  }
+
+  /**
+   * Release periodic work and pending layout updates.
+   */
+  ngOnDestroy(): void {
+    if (this.addHintsIntervalHandle != null) {
+      clearInterval(this.addHintsIntervalHandle);
+    }
+    if (this.timeout != null) {
+      clearTimeout(this.timeout);
+    }
   }
 
   /**

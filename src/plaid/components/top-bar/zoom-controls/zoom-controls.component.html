@@ -1,22 +1,22 @@
-<a
+<button type="button"
   class="button toolbar-icon-button"
   [class.both-color-schemes]="allowBothColorSchemes"
   [class.active]="zoomOutButtonActive"
-  [class.disabled]="!isAbleToZoomOut"
+  [disabled]="!isAbleToZoomOut"
   (click)="zoomOut()"
   title="Zoom out (Ctrl -)"
   aria-label="Zoom out"
 >
   <span class="toolbar-emoji-icon" aria-hidden="true">➖</span>
-</a>
-<a
+</button>
+<button type="button"
   class="button toolbar-icon-button"
   [class.both-color-schemes]="allowBothColorSchemes"
   [class.active]="zoomInButtonActive"
-  [class.disabled]="!isAbleToZoomIn"
+  [disabled]="!isAbleToZoomIn"
   (click)="zoomIn()"
   title="Zoom in (Ctrl +)"
   aria-label="Zoom in"
 >
   <span class="toolbar-emoji-icon" aria-hidden="true">➕</span>
-</a>
+</button>

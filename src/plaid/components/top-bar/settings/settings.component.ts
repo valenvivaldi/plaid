@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   Output
 } from '@angular/core';
@@ -183,8 +184,9 @@ export class SettingsComponent {
   /**
    * Closes dropdown, if user clicked anywhere outside it.
    */
+  @HostListener("window:mousedown", ["$event"])
   onMousedown: (event: MouseEvent) => void = (event: MouseEvent) => {
-    if (!(this.ref.nativeElement as Node).contains(event.target as Node)) {
+    if (this.dropdownOpen && !(this.ref.nativeElement as Node).contains(event.target as Node)) {
       this.dropdownOpen = false;
       this.cdr.detectChanges();
     }
@@ -193,8 +195,9 @@ export class SettingsComponent {
   /**
    * Closes dropdown, if user presses Escape.
    */
+  @HostListener("window:keydown", ["$event"])
   onKeydown: (event: KeyboardEvent) => void = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
+    if (this.dropdownOpen && event.key === 'Escape') {
       this.dropdownOpen = false;
       this.cdr.detectChanges();
     }
@@ -202,13 +205,6 @@ export class SettingsComponent {
 
   set dropdownOpen(value: boolean) {
     this._dropdownOpen = value;
-    if (value) {
-      addEventListener('mousedown', this.onMousedown);
-      addEventListener('keydown', this.onKeydown);
-    } else {
-      removeEventListener('mousedown', this.onMousedown);
-      removeEventListener('keydown', this.onKeydown);
-    }
   }
   get dropdownOpen(): boolean {
     return this._dropdownOpen;

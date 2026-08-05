@@ -1,23 +1,23 @@
-<a class="button both-color-schemes" (click)="decrementWeek()" [class.active]="decrementWeekButtonActive" title="Previous week (F4)">
+<button type="button" class="button both-color-schemes" (click)="decrementWeek()" [class.active]="decrementWeekButtonActive" title="Previous week (F4)" aria-label="Previous week">
   <svg class="icon"><use href="assets/icons.svg#arrow-left"></use></svg>
-</a>
-<a class="button both-color-schemes toggle-button" [class.active]="calendarOpen" (mousedown)="calendarOpen = !calendarOpen" title="Select week">
+</button>
+<button type="button" class="button both-color-schemes toggle-button" [class.active]="calendarOpen" (click)="calendarOpen = !calendarOpen" title="Select week" aria-label="Select week" [attr.aria-expanded]="calendarOpen" aria-controls="week-calendar">
   {{ buttonText }}
-</a>
-<a class="button both-color-schemes" (click)="incrementWeek()" [class.active]="incrementWeekButtonActive" title="Next week (F6)">
+</button>
+<button type="button" class="button both-color-schemes" (click)="incrementWeek()" [class.active]="incrementWeekButtonActive" title="Next week (F6)" aria-label="Next week">
   <svg class="icon"><use href="assets/icons.svg#arrow-right"></use></svg>
-</a>
-<div class="calendar" [class.open]="calendarOpen">
+</button>
+<div id="week-calendar" class="calendar" [attr.aria-hidden]="!calendarOpen" [class.open]="calendarOpen">
   <div class="month-changer">
-    <a class="button" (click)="decrementMonth()" title="Previous month">
+    <button type="button" class="button" (click)="decrementMonth()" title="Previous month" aria-label="Previous month">
       <svg class="icon"><use href="assets/icons.svg#arrow-left"></use></svg>
-    </a>
+    </button>
     <div class="month-label">
       {{ months[month?.getMonth()] }} {{ month?.getFullYear() }}
     </div>
-    <a class="button" (click)="incrementMonth()" title="Next month">
+    <button type="button" class="button" (click)="incrementMonth()" title="Next month" aria-label="Next month">
       <svg class="icon"><use href="assets/icons.svg#arrow-right"></use></svg>
-    </a>
+    </button>
   </div>
   <div class="weekdays">
     @for (weekday of weekdays; track weekday) {
@@ -31,6 +31,10 @@
       class="week"
       [class.selected]="selectedDateRange.start.valueOf() === week[this.visibleDaysStart].valueOf() && selectedDateRange.end.valueOf() === week[this.visibleDaysEnd].valueOf()"
       (click)="selectDateRange({ start: week[this.visibleDaysStart], end: week[this.visibleDaysEnd] })"
+      (keydown.enter)="selectDateRange({ start: week[this.visibleDaysStart], end: week[this.visibleDaysEnd] })"
+      (keydown.space)="selectDateRange({ start: week[this.visibleDaysStart], end: week[this.visibleDaysEnd] }); $event.preventDefault()"
+      role="button"
+      tabindex="0"
       >
       @for (day of week; track day) {
         <div

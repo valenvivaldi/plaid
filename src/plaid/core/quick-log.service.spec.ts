@@ -74,4 +74,21 @@ describe('QuickLogService', () => {
     await expect(firstValueFrom(preferences.getFavoriteKeys$())).resolves.toEqual({});
     expect(storage.has("FAVORITE_KEYS")).toBe(false);
   });
+  it("recovers from corrupted numeric and theme preferences", async () => {
+    storage.set("WORKING_HOURS_START_MINUTES", "NaN");
+    storage.set("WORKING_DAYS_END", "99");
+    storage.set("QUICK_LOG_TIME_MINUTES", "");
+    storage.set("THEME", "neon");
+
+    const preferences = new UserPreferencesService();
+
+    await expect(firstValueFrom(preferences.getWorkingHoursStartMinutes$())).resolves.toBe(540);
+    await expect(firstValueFrom(preferences.getWorkingDaysEnd$())).resolves.toBe(5);
+    await expect(firstValueFrom(preferences.getQuickLogTimeMinutes$())).resolves.toBe(540);
+    await expect(firstValueFrom(preferences.getTheme$())).resolves.toBe("system");
+    expect(storage.has("WORKING_HOURS_START_MINUTES")).toBe(false);
+    expect(storage.has("WORKING_DAYS_END")).toBe(false);
+    expect(storage.has("QUICK_LOG_TIME_MINUTES")).toBe(false);
+    expect(storage.has("THEME")).toBe(false);
+  });
 });

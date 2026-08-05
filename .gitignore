@@ -1,4 +1,6 @@
 .angular
+.pi/
+*.orig
 .idea/
 build/
 dist/

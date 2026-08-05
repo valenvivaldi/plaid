@@ -125,6 +125,9 @@ img {
   transition: 0.1s color, 0.1s background-color, 0.1s box-shadow;
   background-color: transparent;
   border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   font-size: 16px;
   outline: none;
   display: inline-block;
@@ -167,32 +170,6 @@ img {
       background-color: var(--color-primary-5);
       color: #fff;
 
-+.button.toolbar-icon-button,
-.toolbar-icon-button {
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  margin: 0;
-  padding: 0;
-  border-radius: 8px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.toolbar-emoji-icon {
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Noto Color Emoji", "Segoe UI Emoji", sans-serif;
-  font-size: 20px;
-  line-height: 1;
-}
       &:hover {
         background-color: var(--color-primary-4);
       }
@@ -227,6 +204,33 @@ img {
   .spinner {
     margin-bottom: -2px;
   }
+}
+
+.button.toolbar-icon-button,
+.toolbar-icon-button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border-radius: 8px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.toolbar-emoji-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Noto Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-size: 20px;
+  line-height: 1;
 }
 
 // Inputs

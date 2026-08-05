@@ -1,11 +1,14 @@
 <div
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="next-day-modal-title"
   class="wrapper visible"
   (mousedown)="onBackdropClick($event)"
   (keydown)="onKeydown($event)"
   >
   <div class="panel-wrapper visible">
     <div class="panel">
-      <div class="panel-title">📋 Next Day Tasks</div>
+      <div id="next-day-modal-title" class="panel-title">📋 Next Day Tasks</div>
 
       <div class="section">
         <div class="section-label">Select tasks:</div>

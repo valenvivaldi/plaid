@@ -1,20 +1,20 @@
-<a class="button both-color-schemes toolbar-icon-button profile-button" title="Account" aria-label="Account" (mousedown)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen">
+<button type="button" class="button both-color-schemes toolbar-icon-button profile-button" title="Account" aria-label="Account" [attr.aria-expanded]="dropdownOpen" aria-controls="account-menu" (click)="dropdownOpen = !dropdownOpen" [class.active]="dropdownOpen">
   @if (currentUserAvatarUrl) {
-    <img [src]="currentUserAvatarUrl">
+    <img [src]="currentUserAvatarUrl" alt="">
   }
   @if (!currentUserAvatarUrl) {
     <svg class="icon-user"><use href="assets/icons.svg#user"></use></svg>
   }
-</a>
-<div class="dropdown" [class.open]="dropdownOpen">
+</button>
+<div id="account-menu" class="dropdown" [attr.aria-hidden]="!dropdownOpen" [class.open]="dropdownOpen">
   @if (user) {
     <p class="headline">Logged in as {{ user.displayName }}</p>
-    <a class="button padded" (click)="changeCredentials.emit(); dropdownOpen = false">Change credentials</a>
-    <a class="button padded" (click)="forgetAccount.emit(); dropdownOpen = false">Forget account</a>
+    <button type="button" class="button padded" (click)="changeCredentials.emit(); dropdownOpen = false">Change credentials</button>
+    <button type="button" class="button padded" (click)="forgetAccount.emit(); dropdownOpen = false">Forget account</button>
   }
   @if (!user) {
     <p class="headline">Logged out</p>
-    <a class="button padded" (click)="changeCredentials.emit(); dropdownOpen = false">Log in</a>
+    <button type="button" class="button padded" (click)="changeCredentials.emit(); dropdownOpen = false">Log in</button>
   }
   <small class="appName" plaidExtHref="https://github.com/piotrmski/plaid">
     Plaid {{ appVersion }}

@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild} from '@angular/core';
 
 /**
  * Dumb component, presents button, handles refresh shortcuts, and delegates refresh action
@@ -8,7 +8,7 @@ import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} f
     templateUrl: './refresh-button.component.html',
     standalone: false
 })
-export class RefreshButtonComponent implements OnInit {
+export class RefreshButtonComponent {
   @Input()
   disabled = false;
   @Input()
@@ -19,15 +19,13 @@ export class RefreshButtonComponent implements OnInit {
   button: ElementRef;
   buttonActive = false;
 
-  ngOnInit(): void {
-    // Singleton component, no need to unbind
-    addEventListener('keydown', (e: KeyboardEvent) => {
-      if ((e.key === 'F5' || e.key.toLowerCase() === 'r' && e.ctrlKey) && !this.shortcutsDisabled && !e.repeat) {
-        this.buttonActive = true;
-        this.button.nativeElement.click();
-        setTimeout(() => this.buttonActive = false, 50);
-      }
-    });
+  @HostListener("window:keydown", ['$event'])
+  onShortcutKeydown(e: KeyboardEvent): void {
+    if ((e.key === "F5" || e.key.toLowerCase() === "r" && e.ctrlKey) && !this.shortcutsDisabled && !e.repeat) {
+      this.buttonActive = true;
+      this.button.nativeElement.click();
+      setTimeout(() => this.buttonActive = false, 50);
+    }
   }
 
   doRefresh(): void {

@@ -1,6 +1,6 @@
-<a
+<button type="button"
   class="button both-color-schemes toolbar-icon-button"
-  [class.disabled]="disabled"
+  [disabled]="disabled"
   (click)="doRefresh()"
   #button
   [class.active]="buttonActive"
@@ -8,4 +8,4 @@
   aria-label="Refresh worklogs"
 >
   <span class="toolbar-emoji-icon" aria-hidden="true">🔄</span>
-</a>
+</button>
